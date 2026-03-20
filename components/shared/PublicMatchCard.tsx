@@ -47,28 +47,40 @@ export default function PublicMatchCard({ match }: { match: any }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: match.team1?.color || '#333' }} />
-            <span className="text-white font-medium text-lg">{match.team1?.name}</span>
+            <span className="text-white font-semibold text-lg">{match.team1?.name}</span>
           </div>
-          {t1Inn && (
-            <div className="text-right">
-              <span className="text-xl font-display text-white">{t1Inn.total_runs}/{t1Inn.total_wickets}</span>
-              <span className="text-xs text-gray-500 ml-2 font-mono">({Math.floor(t1Inn.total_balls / 6)}.{t1Inn.total_balls % 6} ov)</span>
-            </div>
-          )}
+          {(() => {
+            const hasData = t1Inn || (match.status === 'live' && match.batting_team_id === match.team1?.id)
+            if (!hasData && match.status !== 'completed') return null
+            
+            const inn = t1Inn || { total_runs: 0, total_wickets: 0, total_balls: 0 }
+            return (
+              <div className="text-right">
+                <span className="text-2xl font-display text-white">{inn.total_runs}/{inn.total_wickets}</span>
+                <span className="text-[10px] text-gray-500 ml-2 font-mono">({Math.floor(inn.total_balls / 6)}.{inn.total_balls % 6} ov)</span>
+              </div>
+            )
+          })()}
         </div>
 
         {/* Team 2 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: match.team2?.color || '#333' }} />
-            <span className="text-white font-medium text-lg">{match.team2?.name}</span>
+            <span className="text-white font-semibold text-lg">{match.team2?.name}</span>
           </div>
-          {t2Inn && (
-            <div className="text-right">
-              <span className="text-xl font-display text-white">{t2Inn.total_runs}/{t2Inn.total_wickets}</span>
-              <span className="text-xs text-gray-500 ml-2 font-mono">({Math.floor(t2Inn.total_balls / 6)}.{t2Inn.total_balls % 6} ov)</span>
-            </div>
-          )}
+          {(() => {
+            const hasData = t2Inn || (match.status === 'live' && match.batting_team_id === match.team2?.id)
+            if (!hasData && match.status !== 'completed') return null
+            
+            const inn = t2Inn || { total_runs: 0, total_wickets: 0, total_balls: 0 }
+            return (
+              <div className="text-right">
+                <span className="text-2xl font-display text-white">{inn.total_runs}/{inn.total_wickets}</span>
+                <span className="text-[10px] text-gray-500 ml-2 font-mono">({Math.floor(inn.total_balls / 6)}.{inn.total_balls % 6} ov)</span>
+              </div>
+            )
+          })()}
         </div>
       </div>
 

@@ -6,16 +6,45 @@ import Link from 'next/link'
 import { ArrowRight, Loader2, Activity } from 'lucide-react'
 import { matchesApi } from '@/lib/api'
 import PublicMatchCard from './PublicMatchCard'
+import { createClient } from '@/lib/supabase/client'
 
 export default function HomeScoresSection() {
   const [matches, setMatches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
+    // Initial fetch
     matchesApi.list({ limit: 3, promoted: 'true' })
       .then(({ data }) => setMatches(data?.matches || []))
       .finally(() => setLoading(false))
-  }, [])
+
+    // Real-time subscription for updates
+    const channel = supabase.channel('home-matches')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'innings' }, (payload) => {
+        setMatches(prev => prev.map(m => {
+          if (m.id === payload.new.match_id) {
+            const newInnings = m.innings?.map((inn: any) => 
+              inn.id === payload.new.id ? { ...inn, ...payload.new } : inn
+            )
+            // If the innings wasn't found in the array (e.g. new innings starting), add it
+            if (newInnings && !newInnings.find((inn: any) => inn.id === payload.new.id)) {
+              newInnings.push(payload.new)
+            }
+            return { ...m, innings: newInnings || [payload.new] }
+          }
+          return m
+        }))
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, (payload) => {
+        setMatches(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m))
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase])
 
   return (
     <section className="py-24 px-6 relative border-y border-arena-border/50 bg-arena-dark/50">
