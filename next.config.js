@@ -7,10 +7,8 @@ const nextConfig = {
     ],
   },
 
-  // 🔥 FIX: Prevent jspdf from breaking server build
-  experimental: {
-    serverComponentsExternalPackages: ["jspdf", "jspdf-autotable"],
-  },
+  // ✅ UPDATED (Next.js 16 correct key)
+  serverExternalPackages: ["jspdf", "jspdf-autotable"],
 };
 
 module.exports = nextConfig;
