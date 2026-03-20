@@ -297,8 +297,8 @@ export default function HomePage() {
             <span className="text-pitch-400 font-medium">Prajwal Korgaonkar</span>
           </p>
           <div className="flex items-center gap-4 text-sm text-gray-500">
-            <span>Privacy Policy</span>
-            <span>Terms of Service</span>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
           </div>
         </div>
       </footer>
