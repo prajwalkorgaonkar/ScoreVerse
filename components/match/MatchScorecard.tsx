@@ -75,19 +75,20 @@ export default function MatchScorecard({ match, innings, balls, role }: Props) {
 
   // ✅ FINAL FIX (important)
   const handleExportPDF = async () => {
-    setExporting(true)
+  setExporting(true)
 
-    try {
-      const mod = await import('@/lib/exportPDF')
-      await mod.exportScorecardPDF(match, innings, balls)
-      toast.success('Scorecard exported!')
-    } catch (err) {
-      console.error(err)
-      toast.error('Export failed')
-    } finally {
-      setExporting(false)
-    }
+  try {
+    const mod = await import('@/lib/pdfClient')
+    await mod.generatePDF(match, innings, balls)
+
+    toast.success('Scorecard exported!')
+  } catch (err) {
+    console.error(err)
+    toast.error('Export failed')
+  } finally {
+    setExporting(false)
   }
+}
 
   const copyShareLink = () => {
     const url = `${window.location.origin}/match/live/${match.share_token}`
