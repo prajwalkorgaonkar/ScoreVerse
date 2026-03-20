@@ -126,7 +126,6 @@ export function useLiveMatch({ match, initialInnings, initialBalls }: UseLiveMat
 
   const currentOverBalls = balls
     .filter(b => b.over_number === displayOverNumber)
-    .slice(0, 6)
     .reverse()
 
   return {

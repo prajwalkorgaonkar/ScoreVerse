@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { Plus, Swords, Share2, ExternalLink, Globe, Trash2, Loader2 } from 'lucide-react'
 import { formatMatchStatus } from '@/lib/utils'
 import { matchesApi } from '@/lib/api'
+import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface Props {
   matches: any[]
@@ -26,6 +27,42 @@ export default function MatchesList({ matches: initMatches, role }: Props) {
   const [promotingId, setPromotingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const base = role === 'admin' ? '/dashboard/admin' : '/dashboard/manager'
+  const supabase = createClient()
+
+  // Real-time subscriptions for live score updates
+  useEffect(() => {
+    const channel = supabase.channel('dashboard-matches-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'innings' }, (payload: any) => {
+        if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+          const newData = payload.new
+          setMatches(prev => prev.map(m => {
+            if (m.id === newData.match_id) {
+              const updatedInnings = m.innings ? [...m.innings] : []
+              const idx = updatedInnings.findIndex((inn: any) => inn.id === newData.id)
+              if (idx !== -1) {
+                updatedInnings[idx] = { ...updatedInnings[idx], ...newData }
+              } else {
+                updatedInnings.push(newData)
+              }
+              return { ...m, innings: updatedInnings }
+            }
+            return m
+          }))
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, (payload: any) => {
+        if (payload.eventType === 'UPDATE') {
+          const newData = payload.new
+          setMatches(prev => prev.map(m => m.id === newData.id ? { ...m, ...newData } : m))
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase])
+
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to permanently delete this match? All scorecard boundaries will be wiped.')) return
@@ -121,8 +158,11 @@ export default function MatchesList({ matches: initMatches, role }: Props) {
 
                         <div className="flex items-center gap-4">
                           <div>
-                            <div className="text-xl font-display" style={{ color: match.team1?.color || '#fff' }}>
-                              {match.team1?.short_name || 'TBA'}
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: match.team1?.color || '#333' }} />
+                              <span className="text-xl font-display text-cyan-400">
+                                {match.team1?.short_name || 'TBA'}
+                              </span>
                             </div>
                             {t1Inn && (
                               <div className="text-2xl font-display text-white mt-0.5">
@@ -137,8 +177,11 @@ export default function MatchesList({ matches: initMatches, role }: Props) {
                           <div className="text-sm font-display text-gray-500 pt-6 px-2">VS</div>
 
                           <div>
-                            <div className="text-xl font-display" style={{ color: match.team2?.color || '#fff' }}>
-                              {match.team2?.short_name || 'TBA'}
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: match.team2?.color || '#333' }} />
+                              <span className="text-xl font-display text-amber-400">
+                                {match.team2?.short_name || 'TBA'}
+                              </span>
                             </div>
                             {t2Inn && (
                               <div className="text-2xl font-display text-white mt-0.5">

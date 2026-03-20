@@ -103,7 +103,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ mat
     // Max wickets = players_per_team - 1 (last man standing)
     const maxWickets     = (innings.match?.players_per_team || 11) - 1
     const maxOvers       = innings.match?.total_overs || 20
-    const isInningsOver  = newOvers >= maxOvers || newWickets >= maxWickets
+    
+    // Target reached check for Innings 2
+    const targetReached  = innings.innings_number === 2 && innings.target && newRuns >= innings.target
+    const isInningsOver  = newOvers >= maxOvers || newWickets >= maxWickets || targetReached
 
     // Extra type columns
     const extraCols: Record<string, any> = {}
@@ -221,7 +224,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ m
       .from('matches').select('id, status, created_by').eq('id', resolvedParams.matchId).single()
 
     if (!match)                        return err('Match not found', 404)
-    if (match.status !== 'live')       return err('Match is not live')
+    const validStatuses = ['live', 'innings_break', 'completed']
+    if (!validStatuses.includes(match.status)) return err('Match is not in a modifiable state')
     if (user.role !== 'super_admin' && match.created_by !== user.id) return err('Forbidden', 403)
 
     // Get last ball
@@ -244,7 +248,24 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ m
       else newBalls -= 1
     }
 
+    // --- Action: Delete the ball ---
     await supabase.from('balls').delete().eq('id', lastBall.id)
+
+    // --- State Reversion: If this ball finished an innings/match ---
+    if (match.status === 'innings_break' && innings.innings_number === 1) {
+      // Revert from innings break: Delete Innings 2 and set match back to live
+      await supabase.from('innings').delete().eq('match_id', match.id).eq('innings_number', 2)
+      await supabase.from('matches').update({ status: 'live', current_innings: 1 }).eq('id', match.id)
+    } else if (match.status === 'completed' && innings.innings_number === 2) {
+      // Revert from completed: Set match back to live and clear results
+      await supabase.from('matches').update({ 
+        status: 'live', 
+        winner_team_id: null, 
+        win_by_runs: null, 
+        win_by_wickets: null, 
+        is_tie: false 
+      }).eq('id', match.id)
+    }
 
     const { data: updatedInnings } = await supabase
       .from('innings').update({

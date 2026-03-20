@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Trophy, LayoutDashboard, Users, Swords, BarChart3,
   Settings, LogOut, Menu, X, ChevronRight, Shield,
-  UserCog, Bell, CircleDot, Activity, Home
+  UserCog, CircleDot, Activity, Home
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
@@ -251,14 +251,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             {/* Desktop Horizontal Navbar */}
             <nav className="hidden xl:flex items-center gap-6 mr-4 pr-6 border-r border-arena-border">
               <Link href="/" className="text-sm font-medium text-gray-400 hover:text-pitch-400 transition-colors">Home</Link>
+              <Link href="/guide" className="text-sm font-medium text-gray-400 hover:text-pitch-400 transition-colors">Guide</Link>
               <Link href="/scores" className="text-sm font-medium text-pitch-400 hover:text-pitch-300 transition-colors">Live Scores</Link>
             </nav>
 
-            <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 relative group">
-              <Bell size={18} />
-              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-pitch-500 rounded-full border border-arena-card group-hover:scale-125 transition-transform" />
-            </button>
-            <div className="h-5 w-px bg-arena-border" />
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-pitch-600/30 border border-pitch-600/50 flex items-center justify-center text-pitch-400 text-xs font-bold">
                 {profile?.full_name?.charAt(0).toUpperCase()}

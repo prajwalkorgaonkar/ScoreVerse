@@ -69,7 +69,7 @@ export default function AdminOverview({ stats, recentMatches, recentTournaments 
               <div className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center mb-3`}>
                 <card.icon size={20} className={card.color} />
               </div>
-              <div className="text-3xl font-display text-white">{card.value}</div>
+              <div className="text-2xl sm:text-3xl font-display text-white">{card.value}</div>
               <div className="text-xs text-gray-500 mt-1 group-hover:text-gray-400 transition-colors">{card.label}</div>
             </Link>
           </motion.div>
@@ -128,15 +128,15 @@ export default function AdminOverview({ stats, recentMatches, recentTournaments 
                   href={`/dashboard/admin/matches/${match.id}`}
                   className="flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors"
                 >
-                  <div>
-                    <div className="text-sm font-medium text-white">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="text-sm font-medium text-white truncate">
                       <span style={{ color: match.team1?.color }}>{match.team1?.short_name}</span>
                       <span className="text-gray-500 mx-2">vs</span>
                       <span style={{ color: match.team2?.color }}>{match.team2?.short_name}</span>
                     </div>
                     <div className="text-xs text-gray-500 mt-0.5">{match.total_overs} overs</div>
                   </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${statusColors[match.status] || statusColors.scheduled}`}>
+                  <span className={`text-[10px] sm:text-xs px-2 sm:px-2.5 py-1 rounded-full border font-medium flex-shrink-0 ${statusColors[match.status] || statusColors.scheduled}`}>
                     {match.status === 'live' && <span className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1.5 animate-pulse" />}
                     {formatMatchStatus(match.status)}
                   </span>

@@ -15,11 +15,20 @@ export async function requireAuth(): Promise<{ user: AuthedUser; error: null } |
     return { user: null, error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
   }
 
+  // Fetch role from profiles table (source of truth) instead of user_metadata
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const role = profile?.role || user.user_metadata?.role || 'manager'
+
   return {
     user: { 
       id: user.id, 
       email: user.email || '', 
-      role: user.user_metadata?.role || 'manager' 
+      role,
     },
     error: null,
   }

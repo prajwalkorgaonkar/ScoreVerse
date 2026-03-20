@@ -149,7 +149,7 @@ export default async function TournamentHubPage({ params }: { params: Promise<{ 
                 <Trophy size={14} />
                 TOURNAMENT HUB
               </div>
-              <h1 className="text-4xl md:text-5xl font-display text-white">{tournament.name}</h1>
+              <h1 className="text-3xl md:text-5xl font-display text-white">{tournament.name}</h1>
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
                 <span className="flex items-center gap-1.5"><Crosshair size={14} className="text-pitch-400" /> {tournament.format} Format</span>
                 <span className="flex items-center gap-1.5"><Calendar size={14} className="text-pitch-400" /> {new Date(tournament.start_date).toLocaleDateString()}</span>
@@ -203,8 +203,8 @@ export default async function TournamentHubPage({ params }: { params: Promise<{ 
                       <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-12" title="Played">P</th>
                       <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-12" title="Won">W</th>
                       <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-12" title="Lost">L</th>
-                      <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-24">Form</th>
-                      <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-16" title="Net Run Rate">NRR</th>
+                      <th className="hidden sm:table-cell text-center text-xs text-gray-400 uppercase tracking-widest w-24">Form</th>
+                      <th className="hidden xs:table-cell text-center text-xs text-gray-400 uppercase tracking-widest w-16" title="Net Run Rate">NRR</th>
                       <th className="text-center text-xs text-amber-400 uppercase tracking-widest w-12 font-bold" title="Points">Pts</th>
                     </tr>
                   </thead>
@@ -219,23 +219,23 @@ export default async function TournamentHubPage({ params }: { params: Promise<{ 
                         <td className="text-center py-3 text-gray-400">{team.pld}</td>
                         <td className="text-center py-3 text-pitch-400">{team.won}</td>
                         <td className="text-center py-3 text-crimson-400">{team.lost}</td>
-                        <td className="text-center py-3">
-                          <div className="flex items-center justify-center gap-1.5">
-                            {team.form.map((res: string, fIdx: number) => (
-                              <span key={fIdx} className={cn('w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold', {
-                                'bg-pitch-500/20 text-pitch-400': res === 'W',
-                                'bg-crimson-500/20 text-crimson-400': res === 'L',
-                                'bg-amber-500/20 text-amber-400': res === 'T',
-                              })}>
-                                {res}
-                              </span>
-                            ))}
-                            {team.form.length === 0 && <span className="text-gray-600 text-xs">-</span>}
-                          </div>
-                        </td>
-                        <td className={cn('text-center py-3 font-mono text-xs', team.nrr >= 0 ? 'text-pitch-400' : 'text-crimson-400')}>
-                          {team.nrr >= 0 ? '+' : ''}{team.nrr.toFixed(3)}
-                        </td>
+                         <td className="hidden sm:table-cell text-center py-3">
+                           <div className="flex items-center justify-center gap-1.5">
+                             {team.form.map((res: string, fIdx: number) => (
+                               <span key={fIdx} className={cn('w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold', {
+                                 'bg-pitch-500/20 text-pitch-400': res === 'W',
+                                 'bg-crimson-500/20 text-crimson-400': res === 'L',
+                                 'bg-amber-500/20 text-amber-400': res === 'T',
+                               })}>
+                                 {res}
+                               </span>
+                             ))}
+                             {team.form.length === 0 && <span className="text-gray-600 text-xs">-</span>}
+                           </div>
+                         </td>
+                         <td className={cn('hidden xs:table-cell text-center py-3 font-mono text-xs', team.nrr >= 0 ? 'text-pitch-400' : 'text-crimson-400')}>
+                           {team.nrr >= 0 ? '+' : ''}{team.nrr.toFixed(3)}
+                         </td>
                         <td className="text-center py-3 text-amber-400 font-bold text-base bg-amber-500/5">{team.pts}</td>
                       </tr>
                     ))}

@@ -61,19 +61,19 @@ export default async function ScoresHubPage({ searchParams }: Props) {
     .limit(10)
 
   return (
-    <div className="bg-arena-dark min-h-screen pt-32 pb-20 px-6">
+    <div className="bg-arena-dark min-h-screen pt-24 sm:pt-32 pb-20 px-4 sm:px-6">
       <div className="fixed inset-0 bg-green-glow pointer-events-none opacity-40" />
       <div className="max-w-7xl mx-auto relative z-10">
         
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-pitch-600/10 border border-pitch-600/30 rounded-full text-pitch-400 font-bold tracking-wide uppercase mb-6 shadow-glow-green">
-            <Activity size={18} className="animate-pulse" />
+        <div className="text-center mb-10 sm:mb-16">
+          <div className="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 bg-pitch-600/10 border border-pitch-600/30 rounded-full text-pitch-400 font-bold tracking-wide uppercase mb-4 sm:mb-6 shadow-glow-green text-xs sm:text-sm">
+            <Activity size={16} className="animate-pulse" />
             Global Match Hub
           </div>
-          <h1 className="text-5xl md:text-7xl font-display text-white mb-4 tracking-wide">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-display text-white mb-4 tracking-wide">
             LIVE <span className="gradient-text">SCORES</span>
           </h1>
-          <p className="text-gray-400 max-w-xl mx-auto text-lg pt-2">
+          <p className="text-gray-400 max-w-xl mx-auto text-sm sm:text-lg pt-2">
             Real-time ball-by-ball updates and historical scorecards from tournaments running around the world.
           </p>
         </div>

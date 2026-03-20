@@ -30,6 +30,8 @@ export default function MatchSetup({ match, team1Players, team2Players, matchPla
   const [tossCompleted, setTossCompleted] = useState(!!match.toss_winner_id)
   const [savingPlayers, setSavingPlayers] = useState(false)
   const [starting, setStarting] = useState(false)
+  const [team1Filter, setTeam1Filter] = useState<string>('all')
+  const [team2Filter, setTeam2Filter] = useState<string>('all')
 
   const base = role === 'super_admin' ? '/dashboard/admin' : '/dashboard/manager'
   const liveUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/match/live/${match.share_token}`
@@ -226,9 +228,9 @@ export default function MatchSetup({ match, team1Players, team2Players, matchPla
         {activeTab === 'players' && (
           <motion.div key="players" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
             {[
-              { team: match.team1, players: team1Players, selected: selectedTeam1 },
-              { team: match.team2, players: team2Players, selected: selectedTeam2 },
-            ].map(({ team, players, selected }) => (
+              { team: match.team1, players: team1Players, selected: selectedTeam1, filter: team1Filter, setFilter: setTeam1Filter },
+              { team: match.team2, players: team2Players, selected: selectedTeam2, filter: team2Filter, setFilter: setTeam2Filter },
+            ].map(({ team, players, selected, filter, setFilter }) => (
               <div key={team.id}>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-white flex items-center gap-2">
@@ -242,40 +244,59 @@ export default function MatchSetup({ match, team1Players, team2Players, matchPla
                     {selected.length}/{match.players_per_team}
                   </span>
                 </div>
+
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {['all', 'batsman', 'bowler', 'all_rounder', 'wicket_keeper'].map(r => (
+                    <button
+                      key={r}
+                      onClick={() => setFilter(r)}
+                      className={cn(
+                        'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase transition-all border',
+                        filter === r 
+                          ? 'bg-pitch-600/20 border-pitch-500 text-pitch-400' 
+                          : 'bg-arena-card border-arena-border text-gray-500 hover:text-gray-300'
+                      )}
+                    >
+                      {r.replace('_', ' ')}
+                    </button>
+                  ))}
+                </div>
                 {players.length === 0 ? (
                   <div className="p-4 glass-card rounded-xl text-center text-gray-500 text-sm">
                     No players found. Add players to this team first.
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
-                    {players.map((player: any) => {
-                      const isSelected = selected.includes(player.id)
-                      const isMaxed = selected.length >= match.players_per_team && !isSelected
-                      return (
-                        <button
-                          key={player.id}
-                          onClick={() => togglePlayer(player.id, team.id)}
-                          disabled={isMaxed}
-                          className={cn(
-                            'p-3 rounded-xl border text-left transition-all flex items-center gap-2',
-                            isSelected ? 'border-pitch-500 bg-pitch-500/10' :
-                            isMaxed ? 'border-arena-border opacity-40 cursor-not-allowed' :
-                            'border-arena-border hover:border-gray-600'
-                          )}
-                        >
-                          <div className={cn(
-                            'w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border',
-                            isSelected ? 'bg-pitch-600 border-pitch-600' : 'border-gray-600'
-                          )}>
-                            {isSelected && <Check size={12} className="text-white" />}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="text-sm font-medium text-white truncate">{player.name}</div>
-                            <div className="text-xs text-gray-500 capitalize">{player.role.replace('_', ' ')}</div>
-                          </div>
-                        </button>
-                      )
-                    })}
+                    {players
+                      .filter((p: any) => filter === 'all' || p.role === filter)
+                      .map((player: any) => {
+                        const isSelected = selected.includes(player.id)
+                        const isMaxed = selected.length >= match.players_per_team && !isSelected
+                        return (
+                          <button
+                            key={player.id}
+                            onClick={() => togglePlayer(player.id, team.id)}
+                            disabled={isMaxed}
+                            className={cn(
+                              'p-3 rounded-xl border text-left transition-all flex items-center gap-2',
+                              isSelected ? 'border-pitch-500 bg-pitch-500/10' :
+                              isMaxed ? 'border-arena-border opacity-40 cursor-not-allowed' :
+                              'border-arena-border hover:border-gray-600'
+                            )}
+                          >
+                            <div className={cn(
+                              'w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border',
+                              isSelected ? 'bg-pitch-600 border-pitch-600' : 'border-gray-600'
+                            )}>
+                              {isSelected && <Check size={12} className="text-white" />}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-white truncate">{player.name}</div>
+                              <div className="text-xs text-gray-500 capitalize">{player.role.replace('_', ' ')}</div>
+                            </div>
+                          </button>
+                        )
+                      })}
                   </div>
                 )}
               </div>

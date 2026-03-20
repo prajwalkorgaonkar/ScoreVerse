@@ -47,7 +47,7 @@ export default function PublicMatchCard({ match }: { match: any }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: match.team1?.color || '#333' }} />
-            <span className="text-white font-semibold text-lg">{match.team1?.name}</span>
+            <span className="text-cyan-400 font-semibold text-lg">{match.team1?.name}</span>
           </div>
           {(() => {
             const hasData = t1Inn || (match.status === 'live' && match.batting_team_id === match.team1?.id)
@@ -57,7 +57,7 @@ export default function PublicMatchCard({ match }: { match: any }) {
             return (
               <div className="text-right">
                 <span className="text-2xl font-display text-white">{inn.total_runs}/{inn.total_wickets}</span>
-                <span className="text-[10px] text-gray-500 ml-2 font-mono">({Math.floor(inn.total_balls / 6)}.{inn.total_balls % 6} ov)</span>
+                <span className="text-[10px] text-gray-500 ml-2 font-mono">({inn.total_overs}.{inn.total_balls} ov)</span>
               </div>
             )
           })()}
@@ -67,7 +67,7 @@ export default function PublicMatchCard({ match }: { match: any }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: match.team2?.color || '#333' }} />
-            <span className="text-white font-semibold text-lg">{match.team2?.name}</span>
+            <span className="text-amber-400 font-semibold text-lg">{match.team2?.name}</span>
           </div>
           {(() => {
             const hasData = t2Inn || (match.status === 'live' && match.batting_team_id === match.team2?.id)
@@ -77,7 +77,7 @@ export default function PublicMatchCard({ match }: { match: any }) {
             return (
               <div className="text-right">
                 <span className="text-2xl font-display text-white">{inn.total_runs}/{inn.total_wickets}</span>
-                <span className="text-[10px] text-gray-500 ml-2 font-mono">({Math.floor(inn.total_balls / 6)}.{inn.total_balls % 6} ov)</span>
+                <span className="text-[10px] text-gray-500 ml-2 font-mono">({inn.total_overs}.{inn.total_balls} ov)</span>
               </div>
             )
           })()}
@@ -107,8 +107,8 @@ export default function PublicMatchCard({ match }: { match: any }) {
             {(() => {
               const activeInn = inn2 || inn1
               if (!activeInn) return '0.00'
-              const overs = activeInn.total_overs + (activeInn.total_balls % 6) / 10
-              return overs > 0 ? (activeInn.total_runs / overs).toFixed(2) : '0.00'
+              const totalBallsBowled = activeInn.total_overs * 6 + activeInn.total_balls
+              return totalBallsBowled > 0 ? (activeInn.total_runs / (totalBallsBowled / 6)).toFixed(2) : '0.00'
             })()}
           </span>
         </div>

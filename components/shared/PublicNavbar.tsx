@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Trophy, Menu, X, ChevronRight, Shield, CircleDot } from 'lucide-react'
+import { Trophy, Menu, X, ChevronRight, Shield, CircleDot, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -58,6 +59,14 @@ export default function PublicNavbar() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  const handleLogout = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    toast.success('Signed out')
+    setProfile(null)
+    setMobileMenuOpen(false)
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -118,18 +127,27 @@ export default function PublicNavbar() {
             {loadingUser ? (
               <div className="w-24 h-10 rounded-full bg-white/5 animate-pulse" />
             ) : profile ? (
-              <Link
-                href={profile.role === 'super_admin' ? '/dashboard/admin' : '/dashboard/manager'}
-                className="flex items-center gap-3 px-2 py-1.5 pr-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all group shadow-glow-green/20 hover:shadow-glow-green"
-              >
-                <div className="w-8 h-8 rounded-full bg-pitch-600 flex items-center justify-center text-white text-sm font-bold shadow-glow-green group-hover:scale-105 transition-transform">
-                  {profile.full_name?.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-sm font-medium text-white flex items-center gap-1.5">
-                  {profile.role === 'super_admin' ? <Shield size={12} className="text-amber-400" /> : <CircleDot size={12} className="text-pitch-400" />}
-                  Dashboard
-                </span>
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  href={profile.role === 'super_admin' ? '/dashboard/admin' : '/dashboard/manager'}
+                  className="flex items-center gap-3 px-2 py-1.5 pr-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all group shadow-glow-green/20 hover:shadow-glow-green"
+                >
+                  <div className="w-8 h-8 rounded-full bg-pitch-600 flex items-center justify-center text-white text-sm font-bold shadow-glow-green group-hover:scale-105 transition-transform">
+                    {profile.full_name?.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-white flex items-center gap-1.5">
+                    {profile.role === 'super_admin' ? <Shield size={12} className="text-amber-400" /> : <CircleDot size={12} className="text-pitch-400" />}
+                    Dashboard
+                  </span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="p-2.5 text-gray-500 hover:text-crimson-400 transition-colors rounded-xl hover:bg-white/5"
+                  title="Sign Out"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
             ) : (
               <>
                 <Link
@@ -168,7 +186,8 @@ export default function PublicNavbar() {
             transition={{ duration: 0.2 }}
             className="fixed inset-x-0 top-20 bottom-0 z-40 bg-arena-dark/95 backdrop-blur-3xl md:hidden overflow-y-auto"
           >
-            <div className="flex flex-col px-6 py-8 space-y-6">
+            <div className="flex flex-col px-6 pt-10 pb-12 space-y-2">
+              <div className="text-[10px] font-bold tracking-widest text-gray-500 uppercase mb-4 px-1">Navigation</div>
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -206,6 +225,15 @@ export default function PublicNavbar() {
                       Get Started for Free
                     </Link>
                   </>
+                )}
+                {profile && (
+                  <button
+                    onClick={handleLogout}
+                    className="w-full py-4 flex items-center justify-center gap-2 text-gray-500 hover:text-crimson-400 transition-colors"
+                  >
+                    <LogOut size={16} />
+                    Sign Out
+                  </button>
                 )}
               </div>
             </div>

@@ -11,22 +11,32 @@ export default function PublicMatchList({ initialMatches }: { initialMatches: an
 
   useEffect(() => {
     const channel = supabase.channel('public-match-hub')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'innings' }, (payload) => {
-        setMatches(prev => prev.map(m => {
-          if (m.id === payload.new.match_id) {
-            const newInnings = m.innings?.map((inn: any) => 
-              inn.id === payload.new.id ? { ...inn, ...payload.new } : inn
-            )
-            if (newInnings && !newInnings.find((inn: any) => inn.id === payload.new.id)) {
-              newInnings.push(payload.new)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'innings' }, (payload: any) => {
+        if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+          const newData = payload.new
+          setMatches(prev => prev.map(m => {
+            if (m.id === newData.match_id) {
+              const newInnings = m.innings ? [...m.innings] : []
+              const idx = newInnings.findIndex((inn: any) => inn.id === newData.id)
+              if (idx !== -1) {
+                newInnings[idx] = { ...newInnings[idx], ...newData }
+              } else {
+                newInnings.push(newData)
+              }
+              return { ...m, innings: newInnings }
             }
-            return { ...m, innings: newInnings || [payload.new] }
-          }
-          return m
-        }))
+            return m
+          }))
+        }
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, (payload) => {
-        setMatches(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, (payload: any) => {
+        if (payload.eventType === 'INSERT') {
+          // New matches would ideally be fetched again or added if team/innings data was present
+        }
+        if (payload.eventType === 'UPDATE') {
+          const newData = payload.new
+          setMatches(prev => prev.map(m => m.id === newData.id ? { ...m, ...newData } : m))
+        }
       })
       .subscribe()
 
@@ -37,6 +47,7 @@ export default function PublicMatchList({ initialMatches }: { initialMatches: an
 
   const liveMatches = matches.filter(m => m.status === 'live' || m.status === 'innings_break')
   const completedMatches = matches.filter(m => m.status === 'completed')
+  const scheduledMatches = matches.filter(m => m.status === 'scheduled')
 
   return (
     <>
@@ -82,6 +93,20 @@ export default function PublicMatchList({ initialMatches }: { initialMatches: an
           </div>
         )}
       </div>
+
+      {/* Scheduled Section */}
+      {scheduledMatches.length > 0 && (
+        <div className="mt-16">
+          <div className="flex items-center gap-3 mb-8">
+            <h2 className="text-2xl font-display text-white">Upcoming Matches</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {scheduledMatches.map(match => (
+              <PublicMatchCard key={match.id} match={match} />
+            ))}
+          </div>
+        </div>
+      )}
     </>
   )
 }

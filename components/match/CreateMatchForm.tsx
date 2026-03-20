@@ -29,7 +29,6 @@ export default function CreateMatchForm({ tournaments, teams: initTeams, userId,
     total_overs: 20,
     players_per_team: 11,
     venue: '',
-    description: '',
   })
 
   const base = role === 'super_admin' ? '/dashboard/admin' : '/dashboard/manager'
@@ -122,31 +121,31 @@ export default function CreateMatchForm({ tournaments, teams: initTeams, userId,
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-3xl font-display text-white tracking-wide">CREATE <span className="gradient-text">MATCH</span></h1>
-        <p className="text-gray-500 mt-1">Set up a new match in a few steps</p>
+        <h1 className="text-2xl sm:text-3xl font-display text-white tracking-wide">CREATE <span className="gradient-text">MATCH</span></h1>
+        <p className="text-gray-500 mt-1 text-sm">Set up a new match in a few steps</p>
       </div>
 
       {/* Step indicators */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 -mx-1 px-1">
         {steps.map((s, i) => (
-          <div key={s.n} className="flex items-center gap-2">
+          <div key={s.n} className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <button
               onClick={() => step > s.n && setStep(s.n)}
-              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all ${
+              className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-semibold transition-all ${
                 step > s.n ? 'bg-pitch-600 text-white cursor-pointer' :
                 step === s.n ? 'bg-pitch-600 text-white ring-2 ring-pitch-600/30' :
                 'bg-arena-card border border-arena-border text-gray-500'
               }`}
             >
-              {step > s.n ? <Check size={14} /> : s.n}
+              {step > s.n ? <Check size={12} /> : s.n}
             </button>
-            <span className={`text-xs ${step === s.n ? 'text-white' : 'text-gray-600'}`}>{s.label}</span>
-            {i < steps.length - 1 && <div className="w-8 h-px bg-arena-border mx-1" />}
+            <span className={`text-[10px] sm:text-xs whitespace-nowrap ${step === s.n ? 'text-white' : 'text-gray-600'}`}>{s.label}</span>
+            {i < steps.length - 1 && <div className="w-4 sm:w-8 h-px bg-arena-border mx-0.5 sm:mx-1" />}
           </div>
         ))}
       </div>
 
-      <div className="glass-card rounded-2xl p-6">
+      <div className="glass-card rounded-2xl p-4 sm:p-6">
         <AnimatePresence mode="wait">
           {/* Step 1: Tournament */}
           {step === 1 && (
@@ -318,15 +317,15 @@ export default function CreateMatchForm({ tournaments, teams: initTeams, userId,
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Overs per Innings</label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {[5, 10, 20, 50].map(o => (
                       <button
                         key={o}
                         onClick={() => setForm(f => ({ ...f, total_overs: o }))}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        className={`px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                           form.total_overs === o
                             ? 'bg-pitch-600 text-white'
                             : 'bg-arena-card border border-arena-border text-gray-400 hover:border-gray-600'
@@ -348,12 +347,12 @@ export default function CreateMatchForm({ tournaments, teams: initTeams, userId,
 
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Players per Team</label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {[6, 8, 11].map(p => (
                       <button
                         key={p}
                         onClick={() => setForm(f => ({ ...f, players_per_team: p }))}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        className={`px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                           form.players_per_team === p
                             ? 'bg-pitch-600 text-white'
                             : 'bg-arena-card border border-arena-border text-gray-400 hover:border-gray-600'
@@ -385,18 +384,6 @@ export default function CreateMatchForm({ tournaments, teams: initTeams, userId,
                   onChange={e => setForm(f => ({ ...f, venue: e.target.value }))}
                   className="input-arena"
                   placeholder="e.g. Wankhede Stadium, Mumbai"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">
-                  Match Description <span className="text-gray-600">(optional)</span>
-                </label>
-                <textarea
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  className="input-arena min-h-[80px] py-3"
-                  placeholder="Rules, match info, or special context..."
                 />
               </div>
 

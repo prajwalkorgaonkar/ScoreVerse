@@ -39,7 +39,7 @@ export default function ManagerOverview({ stats, liveMatches, recentMatches }: P
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className={`glass-card rounded-xl p-6 border ${card.border}`}
+            className={`glass-card rounded-xl p-4 sm:p-6 border ${card.border}`}
           >
             <div className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center mb-3`}>
               <card.icon size={20} className={card.color} />
@@ -158,11 +158,11 @@ export default function ManagerOverview({ stats, liveMatches, recentMatches }: P
             <table className="arena-table">
               <thead>
                 <tr>
-                  <th className="pl-6">Matchup</th>
-                  <th>Overs</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th className="text-right pr-6">Action</th>
+                   <th className="pl-6">Matchup</th>
+                   <th className="hidden sm:table-cell">Overs</th>
+                   <th>Status</th>
+                   <th className="hidden md:table-cell">Date</th>
+                   <th className="text-right pr-6">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -177,7 +177,7 @@ export default function ManagerOverview({ stats, liveMatches, recentMatches }: P
                         </div>
                       </div>
                     </td>
-                    <td className="text-gray-400 font-medium font-mono text-xs">{match.total_overs} OV</td>
+                    <td className="hidden sm:table-cell text-gray-400 font-medium font-mono text-xs">{match.total_overs} OV</td>
                     <td>
                       <span className={`text-[10px] px-2.5 py-1 rounded-lg border font-bold uppercase tracking-wider ${
                         match.status === 'live' ? 'text-crimson-400 bg-crimson-500/10 border-crimson-500/30' :
@@ -187,7 +187,7 @@ export default function ManagerOverview({ stats, liveMatches, recentMatches }: P
                         {formatMatchStatus(match.status)}
                       </span>
                     </td>
-                    <td className="text-gray-500 text-xs font-medium">
+                    <td className="hidden md:table-cell text-gray-500 text-xs font-medium">
                       {new Date(match.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="text-right pr-6">

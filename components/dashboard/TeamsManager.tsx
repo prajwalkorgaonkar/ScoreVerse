@@ -263,16 +263,51 @@ export default function TeamsManager({ teams: initTeams, tournaments, role }: Pr
                           <div className="grid grid-cols-2 gap-2">
                             <input value={newPlayer.name} onChange={e => setNewPlayer(f => ({ ...f, name: e.target.value }))}
                               className="input-arena text-sm col-span-2" placeholder="Player Name" />
-                            <select value={newPlayer.role} onChange={e => setNewPlayer(f => ({ ...f, role: e.target.value }))}
-                              className="input-arena text-sm">
-                              {PLAYER_ROLES.map(r => <option key={r} value={r}>{r.replace('_', ' ')}</option>)}
-                            </select>
+                            <div className="col-span-2 space-y-2">
+                              <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Player Role</label>
+                              <div className="flex flex-wrap gap-1.5">
+                                {PLAYER_ROLES.map(r => (
+                                  <button
+                                    key={r}
+                                    type="button"
+                                    onClick={() => setNewPlayer(f => ({ ...f, role: r }))}
+                                    className={cn(
+                                      'px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all border',
+                                      newPlayer.role === r 
+                                        ? 'bg-pitch-600 border-pitch-500 text-white shadow-glow-green/20' 
+                                        : 'bg-arena-card border-arena-border text-gray-400 hover:border-gray-500'
+                                    )}
+                                  >
+                                    {r.replace('_', ' ')}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="col-span-2 space-y-2">
+                              <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Batting Style</label>
+                              <div className="flex gap-1.5">
+                                {BATTING_STYLES.map(s => (
+                                  <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => setNewPlayer(f => ({ ...f, batting_style: s }))}
+                                    className={cn(
+                                      'flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all border text-center',
+                                      newPlayer.batting_style === s 
+                                        ? 'bg-blue-600 border-blue-500 text-white shadow-glow-blue/20' 
+                                        : 'bg-arena-card border-arena-border text-gray-400 hover:border-gray-500'
+                                    )}
+                                  >
+                                    {s.replace('_hand', '')} Hand
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
                             <input value={newPlayer.jersey_number} onChange={e => setNewPlayer(f => ({ ...f, jersey_number: e.target.value }))}
                               className="input-arena text-sm" placeholder="Jersey # (opt)" type="number" min={1} />
-                            <select value={newPlayer.batting_style} onChange={e => setNewPlayer(f => ({ ...f, batting_style: e.target.value }))}
-                              className="input-arena text-sm">
-                              {BATTING_STYLES.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
-                            </select>
+                            
                             <input value={newPlayer.bowling_style} onChange={e => setNewPlayer(f => ({ ...f, bowling_style: e.target.value }))}
                               className="input-arena text-sm" placeholder="Bowling style (opt)" />
                           </div>

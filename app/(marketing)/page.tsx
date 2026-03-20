@@ -32,18 +32,18 @@ export default function HomePage() {
     // Trap the browser Back button strictly on the homepage to prevent returning to authenticated routes 
     // Push dummy states so Next.js router doesn't interpret it as a real routing event
     window.history.pushState({ noBack: true }, '', window.location.href)
-    
+
     const handlePopState = (e: PopStateEvent) => {
       // Re-push immediately so they stay trapped
       window.history.pushState({ noBack: true }, '', window.location.href)
       // Scroll smoothly to top instead of navigating backward
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-    
+
     window.addEventListener('popstate', handlePopState)
 
     const t = setInterval(() => setTicker(p => (p + 1) % 4), 2000)
-    
+
     // Check if user is logged in natively
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -95,7 +95,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-7xl md:text-9xl font-display text-white leading-none mb-6"
+            className="text-5xl md:text-7xl lg:text-9xl font-display text-white leading-none mb-6"
           >
             SCORE<span className="gradient-text">VERSE</span>
           </motion.h1>
@@ -106,7 +106,7 @@ export default function HomePage() {
             transition={{ delay: 0.2 }}
             className="text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            The premium cricket tournament management platform. Live ball-by-ball scoring, 
+            The premium cricket tournament management platform. Live ball-by-ball scoring,
             real-time sharing, and comprehensive analytics — all in one arena.
           </motion.p>
 
@@ -160,7 +160,7 @@ export default function HomePage() {
         >
           <div className="glass-card rounded-2xl p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-pitch-600 via-pitch-400 to-pitch-600" />
-            
+
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className="live-dot" />
@@ -171,7 +171,7 @@ export default function HomePage() {
 
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-display text-white">MUMBAI XI</div>
+                <div className="text-3xl font-display text-white">INDIA XI</div>
                 <div className="text-5xl font-display gradient-text mt-1">187/4</div>
                 <div className="text-gray-400 text-sm mt-1">15.3 overs • RR: 12.04</div>
               </div>
@@ -191,12 +191,11 @@ export default function HomePage() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.7 + i * 0.1 }}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                    b === 'W' ? 'bg-crimson-500 text-white' :
-                    b === '6' ? 'bg-pitch-500 text-white' :
-                    b === '4' ? 'bg-pitch-600 text-white' :
-                    'bg-arena-muted text-gray-300'
-                  }`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${b === 'W' ? 'bg-crimson-500 text-white' :
+                      b === '6' ? 'bg-pitch-500 text-white' :
+                        b === '4' ? 'bg-pitch-600 text-white' :
+                          'bg-arena-muted text-gray-300'
+                    }`}
                 >
                   {b}
                 </motion.div>
@@ -260,7 +259,7 @@ export default function HomePage() {
             <Trophy size={48} className="text-pitch-500 mx-auto mb-6" />
             <h2 className="text-5xl font-display text-white mb-4">READY TO <span className="gradient-text">PLAY?</span></h2>
             <p className="text-gray-400 mb-8">
-              Set up your first tournament in minutes. No credit card required.
+              Set up your first tournament in minutes.
             </p>
             {profile ? (
               <Link
