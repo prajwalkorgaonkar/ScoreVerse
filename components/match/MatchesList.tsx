@@ -8,6 +8,7 @@ import { matchesApi } from '@/lib/api'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
+import { ShareMenu } from './ShareMenu'
 
 interface Props {
   matches: any[]
@@ -36,7 +37,9 @@ export default function MatchesList({ matches: initMatches, role }: Props) {
         if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
           const newData = payload.new
           setMatches(prev => prev.map(m => {
-            if (m.id === newData.match_id) {
+            // Self-healing: Check match_id or existing innings ID
+            const isMatch = m.id === newData.match_id || m.innings?.some((inn: any) => inn.id === newData.id)
+            if (isMatch) {
               const updatedInnings = m.innings ? [...m.innings] : []
               const idx = updatedInnings.findIndex((inn: any) => inn.id === newData.id)
               if (idx !== -1) {
@@ -54,6 +57,8 @@ export default function MatchesList({ matches: initMatches, role }: Props) {
         if (payload.eventType === 'UPDATE') {
           const newData = payload.new
           setMatches(prev => prev.map(m => m.id === newData.id ? { ...m, ...newData } : m))
+        } else if (payload.eventType === 'DELETE') {
+          setMatches(prev => prev.filter(m => m.id !== payload.old.id))
         }
       })
       .subscribe()
@@ -211,15 +216,13 @@ export default function MatchesList({ matches: initMatches, role }: Props) {
                       >
                         {match.status === 'live' ? 'Score →' : 'Manage →'}
                       </Link>
-                      <a
-                        href={`/match/live/${match.share_token}`}
-                        target="_blank"
-                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors"
-                      >
-                        <Share2 size={12} />
-                        {match.share_token}
-                        <ExternalLink size={10} />
-                      </a>
+                      <ShareMenu 
+                        match={match} 
+                        variant="ghost" 
+                        showText={true} 
+                        iconSize={12}
+                        className="opacity-60 hover:opacity-100"
+                      />
                       <button
                         onClick={() => handlePromote(match.id, match.is_promoted)}
                         disabled={promotingId === match.id}

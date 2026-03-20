@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Trophy, Radio, Share2, RefreshCw, MessageSquare } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getBallColor, getBallLabel, calculateRunRate, calculateRequiredRunRate } from '@/lib/utils'
+import { ShareMenu } from './ShareMenu'
 import toast from 'react-hot-toast'
 
 interface Props {
@@ -207,15 +208,6 @@ export default function PublicLiveView({ match, currentInnings: initInnings, inn
 
   const currentOverBalls = balls.filter((b: any) => b.over_number === innings?.total_overs).slice(0, 6).reverse()
 
-  const share = () => {
-    navigator.share?.({
-      title: `${team1?.short_name} vs ${team2?.short_name} - Live`,
-      url: window.location.href,
-    }).catch(() => {
-      navigator.clipboard.writeText(window.location.href)
-      toast.success('Link copied!')
-    })
-  }
 
   return (
     <div className="min-h-screen bg-arena-dark">
@@ -237,10 +229,7 @@ export default function PublicLiveView({ match, currentInnings: initInnings, inn
              )}
            </div>
            
-           <button onClick={share} className="flex items-center gap-2 px-3 py-1.5 bg-arena-card/50 hover:bg-arena-border/30 text-gray-300 text-xs font-medium rounded-lg border border-arena-border transition-colors">
-             <Share2 size={14} />
-             Share
-           </button>
+            <ShareMenu match={match} variant="outline" />
         </div>
 
         {/* Sticky Mobile Header */}

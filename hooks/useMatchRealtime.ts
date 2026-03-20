@@ -40,16 +40,20 @@ export function useMatchRealtime({ matchId, inningsId, onEvent }: Options) {
       (payload) => onEventRef.current({ type: 'ball_added', payload: payload.new })
     )
 
-    // Innings score updates
+    // Innings score updates (both new innings and updates)
     channel.on(
       'postgres_changes',
       {
-        event: 'UPDATE',
+        event: '*',
         schema: 'public',
         table: 'innings',
         filter: `match_id=eq.${matchId}`,
       },
-      (payload) => onEventRef.current({ type: 'innings_update', payload: payload.new })
+      (payload: any) => {
+        if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+          onEventRef.current({ type: 'innings_update', payload: payload.new })
+        }
+      }
     )
 
     // Match status changes

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Check, RotateCcw, Share2, Loader2 } from 'lucide-react'
 import { useLiveMatch } from '@/hooks/useLiveMatch'
 import { InningsBreakOverlay, MatchEndOverlay } from './MatchStateOverlays'
+import { ShareMenu } from './ShareMenu'
 import { cn, getBallColor, getBallLabel, calculateRunRate, calculateRequiredRunRate } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
@@ -174,12 +175,7 @@ export default function LiveScoring({ match, currentInnings: initInnings, matchP
                 {undoing ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
                 Undo
               </button>
-              <button
-                onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/match/live/${match.share_token}`); toast.success('Copied!') }}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors"
-              >
-                <Share2 size={12} /> Share
-              </button>
+              <ShareMenu match={match} />
             </div>
           </div>
 

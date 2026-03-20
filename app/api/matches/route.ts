@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
         team1:teams!matches_team1_id_fkey(id, name, short_name, color),
         team2:teams!matches_team2_id_fkey(id, name, short_name, color),
         tournament:tournaments(id, name, format),
-        innings(id, innings_number, total_runs, total_wickets, total_overs, total_balls, is_completed, target)
+        innings(id, innings_number, batting_team_id, bowling_team_id, total_runs, total_wickets, total_overs, total_balls, is_completed, target)
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)

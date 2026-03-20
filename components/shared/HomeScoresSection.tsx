@@ -19,25 +19,48 @@ export default function HomeScoresSection() {
       .then(({ data }) => setMatches(data?.matches || []))
       .finally(() => setLoading(false))
 
-    // Real-time subscription for updates
+    // Real-time subscription with self-healing match identification
     const channel = supabase.channel('home-matches')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'innings' }, (payload) => {
-        setMatches(prev => prev.map(m => {
-          if (m.id === payload.new.match_id) {
-            const newInnings = m.innings?.map((inn: any) => 
-              inn.id === payload.new.id ? { ...inn, ...payload.new } : inn
-            )
-            // If the innings wasn't found in the array (e.g. new innings starting), add it
-            if (newInnings && !newInnings.find((inn: any) => inn.id === payload.new.id)) {
-              newInnings.push(payload.new)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'innings' }, (payload: any) => {
+        if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+          setMatches(prev => prev.map(m => {
+            // Self-healing: Match if match_id matches OR if we already have an innings with this ID
+            const isMatch = m.id === payload.new.match_id || m.innings?.some((inn: any) => inn.id === payload.new.id)
+            if (isMatch) {
+              const newInnings = m.innings ? [...m.innings] : []
+              const idx = newInnings.findIndex((inn: any) => inn.id === payload.new.id)
+              if (idx !== -1) {
+                newInnings[idx] = { ...newInnings[idx], ...payload.new }
+              } else {
+                newInnings.push(payload.new)
+              }
+              return { ...m, innings: newInnings }
             }
-            return { ...m, innings: newInnings || [payload.new] }
+            return m
+          }))
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, (payload: any) => {
+        setMatches(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m))
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'balls' }, (payload: any) => {
+        const newBall = payload.new
+        setMatches(prev => prev.map(m => {
+          // Find if this ball belongs to any of our matches' innings
+          const inningsToUpdate = m.innings?.find((inn: any) => inn.id === newBall.innings_id)
+          if (inningsToUpdate) {
+            const updatedInnings = m.innings.map((inn: any) => {
+              if (inn.id === newBall.innings_id) {
+                const existingBalls = inn.balls || []
+                // Keep only last 6
+                return { ...inn, balls: [newBall, ...existingBalls].slice(0, 6) }
+              }
+              return inn
+            })
+            return { ...m, innings: updatedInnings }
           }
           return m
         }))
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, (payload) => {
-        setMatches(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m))
       })
       .subscribe()
 

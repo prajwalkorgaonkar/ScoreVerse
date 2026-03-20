@@ -15,7 +15,9 @@ export default function PublicMatchList({ initialMatches }: { initialMatches: an
         if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
           const newData = payload.new
           setMatches(prev => prev.map(m => {
-            if (m.id === newData.match_id) {
+            // Self-healing: Check match_id or existing innings ID
+            const isMatch = m.id === newData.match_id || m.innings?.some((inn: any) => inn.id === newData.id)
+            if (isMatch) {
               const newInnings = m.innings ? [...m.innings] : []
               const idx = newInnings.findIndex((inn: any) => inn.id === newData.id)
               if (idx !== -1) {
@@ -30,13 +32,29 @@ export default function PublicMatchList({ initialMatches }: { initialMatches: an
         }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, (payload: any) => {
-        if (payload.eventType === 'INSERT') {
-          // New matches would ideally be fetched again or added if team/innings data was present
-        }
         if (payload.eventType === 'UPDATE') {
           const newData = payload.new
           setMatches(prev => prev.map(m => m.id === newData.id ? { ...m, ...newData } : m))
+        } else if (payload.eventType === 'DELETE') {
+          setMatches(prev => prev.filter(m => m.id !== payload.old.id))
         }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'balls' }, (payload: any) => {
+        const newBall = payload.new
+        setMatches(prev => prev.map(m => {
+          const inningsToUpdate = m.innings?.find((inn: any) => inn.id === newBall.innings_id)
+          if (inningsToUpdate) {
+            const updatedInnings = m.innings.map((inn: any) => {
+              if (inn.id === newBall.innings_id) {
+                const existingBalls = inn.balls || []
+                return { ...inn, balls: [newBall, ...existingBalls].slice(0, 6) }
+              }
+              return inn
+            })
+            return { ...m, innings: updatedInnings }
+          }
+          return m
+        }))
       })
       .subscribe()
 
