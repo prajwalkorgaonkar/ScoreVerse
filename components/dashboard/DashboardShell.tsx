@@ -12,6 +12,8 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/Skeleton'
+import Breadcrumbs from '@/components/ui/Breadcrumbs'
 
 const adminNav = [
   { icon: Home,            label: 'Public Home',     href: '/' },
@@ -45,7 +47,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const supabase = createClient()
 
     const loadUser = async () => {
-      // getSession() reads from localStorage — instant, no network request
       const { data: { session } } = await supabase.auth.getSession()
 
       if (!session?.user) {
@@ -59,42 +60,15 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         .eq('id', session.user.id)
         .single()
 
-      if (error) {
-        console.warn("Dashboard RLS Guard:", error.message)
+      if (error || !p) {
         setProfile({
           id: session.user.id,
-          full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          full_name: session.user.user_metadata?.full_name || 'User',
           role: session.user.user_metadata?.role || 'manager'
         })
-        setChecking(false)
-        return
+      } else {
+        setProfile(p)
       }
-
-      if (!p) {
-        // Profile not found — might still be creating, retry once
-        setTimeout(async () => {
-          const { data: p2, error: retryError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-            
-          if (retryError || !p2) {
-            setProfile({
-              id: session.user.id,
-              full_name: session.user.user_metadata?.full_name || 'User',
-              role: session.user.user_metadata?.role || 'manager'
-            })
-            setChecking(false)
-            return
-          }
-          setProfile(p2)
-          setChecking(false)
-        }, 1000)
-        return
-      }
-
-      setProfile(p)
       setChecking(false)
     }
 
@@ -118,19 +92,34 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }, 400)
   }
 
+  const isAdmin = profile?.role === 'super_admin'
+  const nav     = isAdmin ? adminNav : managerNav
+
   if (checking) {
     return (
-      <div className="min-h-screen bg-arena-dark flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-2 border-pitch-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-gray-500 text-sm">Loading dashboard…</p>
+      <div className="flex h-screen bg-arena-dark overflow-hidden">
+        <aside className="hidden lg:flex w-64 border-r border-arena-border bg-arena-card flex-col flex-shrink-0 p-6 space-y-8">
+          <Skeleton className="h-10 w-32" />
+          <div className="space-y-4">
+             {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-10 w-full" />)}
+          </div>
+        </aside>
+        <div className="flex-1 flex flex-col">
+          <header className="h-16 border-b border-arena-border bg-arena-card/50 flex items-center px-6">
+            <Skeleton className="h-4 w-48" />
+          </header>
+          <main className="p-8 space-y-6">
+            <Skeleton className="h-8 w-64" />
+            <div className="grid grid-cols-2 gap-6">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+            <Skeleton className="h-64 w-full" />
+          </main>
         </div>
       </div>
     )
   }
-
-  const isAdmin = profile?.role === 'super_admin'
-  const nav     = isAdmin ? adminNav : managerNav
 
   if (pathname.startsWith('/dashboard/admin') && !isAdmin) {
     window.location.replace('/dashboard/manager')
@@ -145,14 +134,21 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         return (
           <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
             className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group',
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group relative',
               active
-                ? 'bg-pitch-600/20 text-pitch-400 border border-pitch-600/30'
+                ? 'bg-pitch-600/20 text-pitch-400 border border-pitch-600/30 shadow-glow-green/5'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             )}>
+            {active && (
+              <motion.div 
+                layoutId="active-pill"
+                className="absolute left-0 w-1 h-6 bg-pitch-500 rounded-r-full"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              />
+            )}
             <item.icon size={18} className={active ? 'text-pitch-400' : 'text-gray-500 group-hover:text-gray-300'} />
             {item.label}
-            {active && <ChevronRight size={14} className="ml-auto text-pitch-500" />}
+            {active && <ChevronRight size={14} className="ml-auto text-pitch-500/50" />}
           </Link>
         )
       })}
@@ -186,11 +182,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
           <NavLinks />
         </nav>
 
-        <div className="p-4 border-t border-arena-border">
+        <div className="p-4 border-t border-arena-border bg-arena-dark/20">
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
             <div className="w-8 h-8 rounded-full bg-pitch-600/30 border border-pitch-600/50 flex items-center justify-center text-pitch-400 text-xs font-bold flex-shrink-0">
               {profile?.full_name?.charAt(0).toUpperCase()}
@@ -242,29 +238,27 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <header className="h-16 border-b border-arena-border bg-arena-card/50 backdrop-blur flex items-center justify-between px-4 lg:px-6 flex-shrink-0">
+        <header className="h-16 border-b border-arena-border bg-arena-card/50 backdrop-blur flex items-center justify-between px-4 lg:px-6 flex-shrink-0 z-30">
           <button onClick={() => setOpen(true)} className="lg:hidden text-gray-400 hover:text-white p-1">
             <Menu size={22} />
           </button>
-          <div className="hidden lg:block">
-            <span className="text-sm font-medium text-gray-400">
-              {nav.find(n => (n.href === '/dashboard/admin' || n.href === '/dashboard/manager' ? pathname === n.href : pathname.startsWith(n.href)))?.label || 'Dashboard'}
-            </span>
+          
+          <div className="flex-1 hidden sm:block ml-4">
+            <Breadcrumbs />
           </div>
           
           <div className="flex items-center gap-4 ml-auto">
             {/* Desktop Horizontal Navbar */}
-            <nav className="hidden md:flex items-center gap-6 mr-4 pr-6 border-r border-arena-border">
+            <nav className="hidden xl:flex items-center gap-6 mr-4 pr-6 border-r border-arena-border">
               <Link href="/" className="text-sm font-medium text-gray-400 hover:text-pitch-400 transition-colors">Home</Link>
-              <Link href="/about" className="text-sm font-medium text-gray-400 hover:text-pitch-400 transition-colors">About Us</Link>
-              <Link href="/contact" className="text-sm font-medium text-gray-400 hover:text-pitch-400 transition-colors">Contact</Link>
               <Link href="/scores" className="text-sm font-medium text-pitch-400 hover:text-pitch-300 transition-colors">Live Scores</Link>
             </nav>
 
-            <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+            <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 relative group">
               <Bell size={18} />
+              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-pitch-500 rounded-full border border-arena-card group-hover:scale-125 transition-transform" />
             </button>
-            <div className="h-5 w-px bg-arena-border lg:hidden" />
+            <div className="h-5 w-px bg-arena-border" />
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-pitch-600/30 border border-pitch-600/50 flex items-center justify-center text-pitch-400 text-xs font-bold">
                 {profile?.full_name?.charAt(0).toUpperCase()}
@@ -274,13 +268,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-6">{children}</div>
+        <main className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="p-4 lg:p-6 pb-20">{children}</div>
         </main>
 
-        <footer className="border-t border-arena-border/50 px-6 py-3 flex-shrink-0">
-          <p className="text-center text-gray-700 text-xs">
-            © 2026 ScoreVerse · All rights reserved to <span className="text-gray-600">Prajwal Korgaonkar</span>
+        <footer className="border-t border-arena-border/50 px-6 py-3 flex-shrink-0 bg-arena-card/30">
+          <p className="text-center text-gray-700 text-[10px] uppercase tracking-widest">
+            © 2026 ScoreVerse · All rights reserved to <span className="text-gray-600 hover:text-gray-400 cursor-default transition-colors">Prajwal Korgaonkar</span>
           </p>
         </footer>
       </div>

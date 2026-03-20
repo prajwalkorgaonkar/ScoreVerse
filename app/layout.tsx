@@ -1,11 +1,37 @@
 import type { Metadata } from 'next'
 import { Toaster } from 'react-hot-toast'
+import { Bebas_Neue, DM_Sans, JetBrains_Mono } from 'next/font/google'
 import '@/styles/globals.css'
+import { cn } from '@/lib/utils'
+
+const bebas = Bebas_Neue({ 
+  weight: '400', 
+  subsets: ['latin'], 
+  variable: '--font-display',
+  display: 'swap' 
+})
+
+const dmSans = DM_Sans({ 
+  subsets: ['latin'], 
+  variable: '--font-body',
+  display: 'swap'
+})
+
+const mono = JetBrains_Mono({ 
+  subsets: ['latin'], 
+  variable: '--font-mono',
+  display: 'swap'
+})
 
 export const metadata: Metadata = {
   title: 'ScoreVerse — Live Cricket Tournament Management',
   description: 'Premium cricket tournament management with live ball-by-ball scoring',
   keywords: 'cricket, tournament, live scoring, cricket management',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   openGraph: {
     title: 'ScoreVerse',
     description: 'Premium cricket tournament management platform',
@@ -19,12 +45,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark" data-scroll-behavior="smooth">
+    <html lang="en" className={cn("dark", bebas.variable, dmSans.variable, mono.variable)} data-scroll-behavior="smooth">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* Fonts are now handled via next/font */}
       </head>
-      <body className="noise-bg antialiased">
+      <body className="noise-bg antialiased font-body">
         <div className="relative z-10">
           {children}
         </div>

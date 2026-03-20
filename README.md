@@ -78,7 +78,7 @@ git push -u origin main
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 App Router |
+| Framework | Next.js 16 App Router |
 | Database + Auth | Supabase (PostgreSQL + GoTrue) |
 | Realtime | Supabase Realtime |
 | Styling | Tailwind CSS |

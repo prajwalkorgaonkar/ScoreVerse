@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Trophy, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
@@ -64,6 +64,84 @@ export default function LoginPage() {
   }
 
   return (
+    <div className="glass-card rounded-2xl p-8">
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-3 px-4 py-3 bg-crimson-500/10 border border-crimson-500/30 rounded-xl mb-5 text-sm text-crimson-400"
+        >
+          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+          {error}
+        </motion.div>
+      )}
+
+      <form onSubmit={handleLogin} className="space-y-5">
+        <div>
+          <label className="block text-sm text-gray-400 mb-2 font-medium">Email address</label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => { setEmail(e.target.value); setError('') }}
+            className="input-arena"
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm text-gray-400 font-medium">Password</label>
+            <Link href="/auth/forgot-password" className="text-xs text-pitch-400 hover:text-pitch-300 transition-colors">
+              Forgot password?
+            </Link>
+          </div>
+          <div className="relative">
+            <input
+              type={showPw ? 'text' : 'password'}
+              value={password}
+              onChange={e => { setPass(e.target.value); setError('') }}
+              className="input-arena pr-12"
+              placeholder="••••••••"
+              autoComplete="current-password"
+              required
+            />
+            <button type="button" onClick={() => setShowPw(!showPw)} tabIndex={-1}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
+              {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" disabled={loading}
+          className="w-full py-3.5 bg-pitch-600 hover:bg-pitch-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-glow-green">
+          {loading
+            ? <><Loader2 size={18} className="animate-spin" /> Signing in…</>
+            : 'Sign In'
+          }
+        </button>
+      </form>
+
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-arena-border" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-arena-card px-3 text-xs text-gray-600">New to ScoreVerse?</span>
+        </div>
+      </div>
+
+      <Link href="/auth/register"
+        className="block w-full py-3 border border-arena-border hover:border-pitch-600/60 text-center text-sm font-medium text-gray-300 hover:text-white rounded-xl transition-all duration-200">
+        Create an account
+      </Link>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
     <div className="min-h-screen bg-arena-dark flex items-center justify-center px-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-green-glow pointer-events-none" />
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-pitch-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -90,79 +168,14 @@ export default function LoginPage() {
           <p className="text-gray-500 mt-2 text-sm">Sign in to manage your tournaments</p>
         </div>
 
-        <div className="glass-card rounded-2xl p-8">
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-start gap-3 px-4 py-3 bg-crimson-500/10 border border-crimson-500/30 rounded-xl mb-5 text-sm text-crimson-400"
-            >
-              <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
-              {error}
-            </motion.div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block text-sm text-gray-400 mb-2 font-medium">Email address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => { setEmail(e.target.value); setError('') }}
-                className="input-arena"
-                placeholder="you@example.com"
-                autoComplete="email"
-                required
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm text-gray-400 font-medium">Password</label>
-                <Link href="/auth/forgot-password" className="text-xs text-pitch-400 hover:text-pitch-300 transition-colors">
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => { setPass(e.target.value); setError('') }}
-                  className="input-arena pr-12"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  required
-                />
-                <button type="button" onClick={() => setShowPw(!showPw)} tabIndex={-1}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
-                  {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            <button type="submit" disabled={loading}
-              className="w-full py-3.5 bg-pitch-600 hover:bg-pitch-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-glow-green">
-              {loading
-                ? <><Loader2 size={18} className="animate-spin" /> Signing in…</>
-                : 'Sign In'
-              }
-            </button>
-          </form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-arena-border" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-arena-card px-3 text-xs text-gray-600">New to ScoreVerse?</span>
-            </div>
+        <Suspense fallback={
+          <div className="glass-card rounded-2xl p-8 flex flex-col items-center gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-pitch-500" />
+            <p className="text-gray-500 text-sm">Loading security gate...</p>
           </div>
-
-          <Link href="/auth/register"
-            className="block w-full py-3 border border-arena-border hover:border-pitch-600/60 text-center text-sm font-medium text-gray-300 hover:text-white rounded-xl transition-all duration-200">
-            Create an account
-          </Link>
-        </div>
+        }>
+          <LoginForm />
+        </Suspense>
 
         <p className="text-center text-gray-600 text-xs mt-6">
           © 2026 ScoreVerse · All rights reserved to <span className="text-gray-500">Prajwal Korgaonkar</span>
@@ -171,3 +184,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

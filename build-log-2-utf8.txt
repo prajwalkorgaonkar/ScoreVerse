@@ -1,0 +1,63 @@
+﻿
+> scoreverse@1.0.0 build
+> next build
+
+Γû▓ Next.js 16.2.0 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 4.4s
+  Running TypeScript ...
+node.exe : Failed to 
+type check.
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (Failed to typ   
+ e check.:String) [    
+], RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+
+.next/dev/types/validat
+or.ts:575:1
+Type error: Cannot 
+find name 'i'.
+
+  [90m573 |[0m   
+[36mtype[0m __Unused 
+= __Check
+  [90m574 |[0m }
+[31m[1m>[0m 
+[90m575 |[0m i/tourna
+ments/[id]/standings[3
+2m">> = Specific[0m
+  [90m    |[0m 
+[31m[1m^[0m
+  [90m576 |[0m [32m 
+ const handler = {} as 
+typeof import("[0m..[
+35m/../[0m..[35m/app/
+api[0m/tournaments/[id
+]/standings/route...[3
+2m.[0m
+  [90m577 |[0m [32m 
+ type __Check = 
+__IsExpected<typeof 
+handler>[0m
+  [90m578 |[0m [32m 
+ // @ts-ignore[0m
+Next.js build worker 
+exited with code: 1 
+and signal: null

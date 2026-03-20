@@ -1,0 +1,123 @@
+﻿
+> scoreverse@1.0.0 build
+> next build
+
+Γû▓ Next.js 16.2.0 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 4.4s
+  Running TypeScript ...
+  Finished TypeScript in 4.9s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/27) ...
+node.exe : Γ¿» 
+useSearchParams() 
+should be wrapped in a 
+suspense boundary at 
+page "/auth/login". 
+Read more: https://next
+js.org/docs/messages/mi
+ssing-suspense-with-csr
+-bailout
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (Γ¿» useSearch   
+ Pa...ith-csr-bailo    
+ut:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+    at S (C:\Users\praj
+w\Downloads\ScoreVerse\
+ScoreVerse\.next\server
+\chunks\ssr\node_module
+s_next_0w2y7fz._.js:2:2
+692)
+    at r (C:\Users\praj
+w\Downloads\ScoreVerse\
+ScoreVerse\.next\server
+\chunks\ssr\node_module
+s_next_0w2y7fz._.js:4:6
+760)
+    at C:\Users\prajw\D
+ownloads\ScoreVerse\Sco
+reVerse\.next\server\ch
+unks\ssr\_023nkez._.js:
+1:4936
+    at an (C:\Users\pra
+jw\Downloads\ScoreVerse
+\ScoreVerse\node_module
+s\next\dist\compiled\ne
+xt-server\app-page-turb
+o.runtime.prod.js:2:842
+67)
+    at ai (C:\Users\pra
+jw\Downloads\ScoreVerse
+\ScoreVerse\node_module
+s\next\dist\compiled\ne
+xt-server\app-page-turb
+o.runtime.prod.js:2:860
+86)
+    at al (C:\Users\pra
+jw\Downloads\ScoreVerse
+\ScoreVerse\node_module
+s\next\dist\compiled\ne
+xt-server\app-page-turb
+o.runtime.prod.js:2:107
+860)
+    at ao (C:\Users\pra
+jw\Downloads\ScoreVerse
+\ScoreVerse\node_module
+s\next\dist\compiled\ne
+xt-server\app-page-turb
+o.runtime.prod.js:2:105
+275)
+    at aa (C:\Users\pra
+jw\Downloads\ScoreVerse
+\ScoreVerse\node_module
+s\next\dist\compiled\ne
+xt-server\app-page-turb
+o.runtime.prod.js:2:846
+19)
+    at ai (C:\Users\pra
+jw\Downloads\ScoreVerse
+\ScoreVerse\node_module
+s\next\dist\compiled\ne
+xt-server\app-page-turb
+o.runtime.prod.js:2:861
+35)
+    at ai (C:\Users\pra
+jw\Downloads\ScoreVerse
+\ScoreVerse\node_module
+s\next\dist\compiled\ne
+xt-server\app-page-turb
+o.runtime.prod.js:2:104
+615)
+Error occurred 
+prerendering page 
+"/auth/login". Read 
+more: https://nextjs.or
+g/docs/messages/prerend
+er-error
+Export encountered an 
+error on 
+/auth/login/page: 
+/auth/login, exiting 
+the build.
+Γ¿» Next.js build 
+worker exited with 
+code: 1 and signal: 
+null

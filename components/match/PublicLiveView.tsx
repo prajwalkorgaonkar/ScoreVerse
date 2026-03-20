@@ -177,7 +177,9 @@ export default function PublicLiveView({ match, currentInnings: initInnings, inn
                   <div className="flex-1">
                     <div className="text-sm font-medium mb-1" style={{ color: team1?.color }}>
                       {team1?.short_name}
-                      {innings?.batting_team_id === team1?.id && <span className="text-crimson-500 ml-2 text-[10px] uppercase font-bold tracking-wider">Batting</span>}
+                      {innings?.batting_team_id === team1?.id && matchStatus !== 'completed' && (
+                        <span className="text-crimson-500 ml-2 text-[10px] uppercase font-bold tracking-wider">Batting</span>
+                      )}
                     </div>
                     {(() => {
                       const t1Inn = match.innings?.find((i: any) => i.batting_team_id === team1?.id);
@@ -206,7 +208,9 @@ export default function PublicLiveView({ match, currentInnings: initInnings, inn
                   {/* Team 2 Side */}
                   <div className="flex-1 text-right">
                     <div className="text-sm font-medium mb-1" style={{ color: team2?.color }}>
-                      {innings?.batting_team_id === team2?.id && <span className="text-crimson-500 mr-2 text-[10px] uppercase font-bold tracking-wider">Batting</span>}
+                      {innings?.batting_team_id === team2?.id && matchStatus !== 'completed' && (
+                        <span className="text-crimson-500 mr-2 text-[10px] uppercase font-bold tracking-wider">Batting</span>
+                      )}
                       {team2?.short_name}
                     </div>
                     {(() => {

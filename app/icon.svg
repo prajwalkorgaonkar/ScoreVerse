@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="10" fill="#16a34a"/>
+  <g transform="translate(24,24)" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Trophy cup -->
+    <path d="M-6,-10 L6,-10 L5,0 C5,4 2,7 0,7 C-2,7 -5,4 -5,0 Z" fill="white" stroke="none"/>
+    <!-- Left handle -->
+    <path d="M-6,-8 C-10,-8 -11,-3 -7,0"/>
+    <!-- Right handle -->
+    <path d="M6,-8 C10,-8 11,-3 7,0"/>
+    <!-- Stem -->
+    <line x1="0" y1="7" x2="0" y2="11"/>
+    <!-- Base -->
+    <path d="M-5,11 L5,11 C5,11 4,13 0,13 C-4,13 -5,11 -5,11" fill="white" stroke="none"/>
+    <rect x="-6" y="13" width="12" height="2" rx="1" fill="white" stroke="none"/>
+  </g>
+</svg>

@@ -135,7 +135,7 @@ export default function LiveScoring({ match, currentInnings: initInnings, matchP
           <div className="flex items-end justify-between">
             <div>
               <div className="text-sm font-medium mb-1" style={{ color: battingTeam?.color }}>
-                {battingTeam?.name} <span className="text-gray-500 text-xs">(Batting)</span>
+                {battingTeam?.name} {match.status !== 'completed' && <span className="text-gray-500 text-xs">(Batting)</span>}
               </div>
               <motion.div key={innings?.total_runs} className="text-5xl font-display text-white"
                 animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 0.25 }}>
