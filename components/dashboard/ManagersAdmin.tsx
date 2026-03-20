@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { UserCog, Shield, CircleDot, Trash2, RefreshCw, Loader2, Crown } from 'lucide-react'
+import { UserCog, Shield, CircleDot, Trash2, RefreshCw, Loader2, Crown, CheckCircle2, XCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -24,13 +24,36 @@ export default function ManagersAdmin({ managers: init, currentUserId }: Props) 
 
     setUpdatingId(userId)
     try {
-      const supabase = createClient()
-      const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId)
-      if (error) throw error
+      const res = await fetch(`/api/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole })
+      })
+      if (!res.ok) throw new Error(await res.text())
       setManagers(prev => prev.map(m => m.id === userId ? { ...m, role: newRole } : m))
       toast.success(`Role updated to ${newRole}`)
     } catch (err: any) {
       toast.error(err.message || 'Failed to update role')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const toggleApproval = async (userId: string, currentStatus: boolean) => {
+    if (userId === currentUserId) return toast.error("Can't change your own approval status")
+    const newStatus = !currentStatus
+    setUpdatingId(userId)
+    try {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_approved: newStatus })
+      })
+      if (!res.ok) throw new Error(await res.text())
+      setManagers(prev => prev.map(m => m.id === userId ? { ...m, is_approved: newStatus } : m))
+      toast.success(`Manager ${newStatus ? 'approved' : 'revoked'}`)
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update approval status')
     } finally {
       setUpdatingId(null)
     }
@@ -42,9 +65,8 @@ export default function ManagersAdmin({ managers: init, currentUserId }: Props) 
 
     setDeletingId(userId)
     try {
-      const supabase = createClient()
-      const { error } = await supabase.from('profiles').delete().eq('id', userId)
-      if (error) throw error
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error(await res.text())
       setManagers(prev => prev.filter(m => m.id !== userId))
       toast.success('User deleted')
     } catch (err: any) {
@@ -123,6 +145,19 @@ export default function ManagersAdmin({ managers: init, currentUserId }: Props) 
               </div>
 
               <div className="flex items-center gap-3">
+                {/* Approval badge */}
+                {manager.role === 'manager' && (
+                  <span className={cn(
+                    'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-medium',
+                    manager.is_approved
+                      ? 'text-pitch-400 bg-pitch-500/10 border-pitch-500/20'
+                      : 'text-crimson-400 bg-crimson-500/10 border-crimson-500/20'
+                  )}>
+                    {manager.is_approved ? <CheckCircle2 size={11} /> : <XCircle size={11} />}
+                    {manager.is_approved ? 'Approved' : 'Pending'}
+                  </span>
+                )}
+
                 {/* Role badge */}
                 <span className={cn(
                   'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-medium',
@@ -137,6 +172,23 @@ export default function ManagersAdmin({ managers: init, currentUserId }: Props) 
                 {/* Actions — only for other users */}
                 {manager.id !== currentUserId && (
                   <div className="flex items-center gap-1">
+                    {manager.role === 'manager' && (
+                      <button
+                        onClick={() => toggleApproval(manager.id, manager.is_approved)}
+                        disabled={!!updatingId}
+                        title={manager.is_approved ? "Revoke account approval" : "Approve this manager"}
+                        className={cn(
+                          "p-2 rounded-lg transition-colors text-white",
+                          manager.is_approved 
+                            ? "hover:text-crimson-400 hover:bg-crimson-500/10" 
+                            : "hover:text-pitch-400 hover:bg-pitch-500/10"
+                        )}
+                      >
+                        {updatingId === manager.id
+                          ? <Loader2 size={14} className="animate-spin" />
+                          : manager.is_approved ? <XCircle size={14} /> : <CheckCircle2 size={14} />}
+                      </button>
+                    )}
                     <button
                       onClick={() => toggleRole(manager.id, manager.role)}
                       disabled={!!updatingId}

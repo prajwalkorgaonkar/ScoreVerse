@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function MatchHistoryPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
+  const { id } = await params
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
@@ -19,7 +20,7 @@ export default async function MatchHistoryPage({ params }: { params: { id: strin
       tournament:tournaments(id, name),
       innings(*)
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!match) notFound()

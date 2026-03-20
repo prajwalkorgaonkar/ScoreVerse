@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function MatchDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
+  const { id } = await params
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
@@ -20,7 +21,7 @@ export default async function MatchDetailPage({ params }: { params: { id: string
       tournament:tournaments(id, name),
       innings(*)
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!match) notFound()
@@ -28,7 +29,7 @@ export default async function MatchDetailPage({ params }: { params: { id: string
   // Redirect to scoring if live
   if (match.status === 'live') {
     const base = profile?.role === 'super_admin' ? '/dashboard/admin' : '/dashboard/manager'
-    redirect(`${base}/matches/${params.id}/scoring`)
+    redirect(`${base}/matches/${id}/scoring`)
   }
 
   // Get players for both teams
@@ -49,7 +50,7 @@ export default async function MatchDetailPage({ params }: { params: { id: string
   const { data: matchPlayers } = await supabase
     .from('match_players')
     .select('*')
-    .eq('match_id', params.id)
+    .eq('match_id', id)
 
   return (
     <MatchSetup

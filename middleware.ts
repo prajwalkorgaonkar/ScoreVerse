@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
   // Attach cookie debug header directly so I can parse it remotely
   supabaseResponse.headers.set('x-debug-cookies', JSON.stringify(request.cookies.getAll()))

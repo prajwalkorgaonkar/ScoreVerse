@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: any) {
-    console.error('CrickArena ErrorBoundary caught:', error, info)
+    console.error('ScoreVerse ErrorBoundary caught:', error, info)
   }
 
   render() {

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { requireAuth, requireAdmin, ok, err } from '@/lib/api-helpers'
 
 // GET /api/tournaments/[id]
@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   try {
     const body = await req.json()
-    const allowed = ['name', 'description', 'format', 'status', 'start_date', 'end_date']
+    const allowed = ['name', 'description', 'format', 'status', 'start_date', 'end_date', 'is_promoted']
     const updates: Record<string, any> = {}
     for (const key of allowed) {
       if (key in body) updates[key] = body[key]
@@ -48,11 +48,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     if (Object.keys(updates).length === 0) return err('No valid fields to update')
 
-    const supabase = createClient()
+    const adminClient = createAdminClient()
 
     // Non-admins can only update their own tournaments
     if (user.role !== 'super_admin') {
-      const { data: existing } = await supabase
+      const { data: existing } = await adminClient
         .from('tournaments')
         .select('created_by')
         .eq('id', resolvedParams.id)
@@ -62,12 +62,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await adminClient
       .from('tournaments')
       .update(updates)
       .eq('id', resolvedParams.id)
       .select()
       .single()
+
+    // Explicitly mirror the is_promoted attribute downwards directly to all child matches natively
+    if (updates.is_promoted !== undefined) {
+      await adminClient.from('matches').update({ is_promoted: updates.is_promoted }).eq('tournament_id', resolvedParams.id)
+    }
 
     if (error) return err(error.message, 500)
     return ok({ tournament: data })
@@ -83,8 +88,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (authError) return authError
 
   try {
-    const supabase = createClient()
-    const { error } = await supabase
+    const adminClient = createAdminClient()
+    const { error } = await adminClient
       .from('tournaments')
       .delete()
       .eq('id', resolvedParams.id)

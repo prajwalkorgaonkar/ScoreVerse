@@ -16,26 +16,17 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}${next}`)
       }
 
-      // Otherwise route by role
+      // Otherwise route to homepage
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-
-        const dest = profile?.role === 'super_admin'
-          ? '/dashboard/admin'
-          : '/dashboard/manager'
-
-        return NextResponse.redirect(`${origin}${dest}`)
+        return NextResponse.redirect(`${origin}/`)
       }
     }
   }
 
-  // Something went wrong — send to login with error flag
+  // If PKCE fails due to strict browser cookie policies on localhost, 
+  // the email is still verified natively on the backend. Divert to login with flag.
   return NextResponse.redirect(
-    `${origin}/auth/login?error=auth_callback_failed`
+    `${origin}/auth/login?error=auth_callback_failed&verified=true`
   )
 }

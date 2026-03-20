@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function TournamentDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
+  const { id } = await params
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
@@ -12,7 +13,7 @@ export default async function TournamentDetailPage({ params }: { params: { id: s
   const { data: tournament } = await supabase
     .from('tournaments')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!tournament) notFound()
@@ -20,7 +21,7 @@ export default async function TournamentDetailPage({ params }: { params: { id: s
   const { data: teams } = await supabase
     .from('teams')
     .select('*, players(count)')
-    .eq('tournament_id', params.id)
+    .eq('tournament_id', id)
     .order('name')
 
   const { data: matches } = await supabase
@@ -31,7 +32,7 @@ export default async function TournamentDetailPage({ params }: { params: { id: s
       team2:teams!matches_team2_id_fkey(id, name, short_name, color),
       innings(*)
     `)
-    .eq('tournament_id', params.id)
+    .eq('tournament_id', id)
     .order('created_at', { ascending: false })
 
   return (

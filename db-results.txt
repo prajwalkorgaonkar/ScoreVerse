@@ -1,0 +1,17 @@
+Checking Supabase Database State...
+Found 7 users in auth.users
+ - [auth.users] ID: 7625b68f-6a64-45bc-b25b-6cff0cd7c2a6 | Email: scoreversebusiness@gmail.com
+ - [auth.users] ID: 51e33f07-071b-4c6e-a531-9fe911954f93 | Email: testmanager100@gmail.com
+ - [auth.users] ID: 799509f1-7dc5-429a-8c4a-83eacf9a530c | Email: bot@crickarena.local
+ - [auth.users] ID: 9ddafbea-d586-4bda-b6ed-0d929a486cc2 | Email: manager13@crickarena.local
+ - [auth.users] ID: 5106c048-0f54-43f5-abe4-8bcf116ee780 | Email: eigenpythagoras@gmail.com
+ - [auth.users] ID: e93b0291-db6c-4c70-ba4f-fb76d67d0f87 | Email: korgaonkarprajwal05@gmail.com
+ - [auth.users] ID: 91ebd43c-0e1c-4803-b7db-f55edca859c8 | Email: prajwalkorgaonkar10@gmail.com
+Found 7 profiles in public.profiles
+ - [profiles] ID: e93b0291-db6c-4c70-ba4f-fb76d67d0f87 | Email: korgaonkarprajwal05@gmail.com | Role: manager | Approved: false
+ - [profiles] ID: 5106c048-0f54-43f5-abe4-8bcf116ee780 | Email: eigenpythagoras@gmail.com | Role: manager | Approved: true
+ - [profiles] ID: 7625b68f-6a64-45bc-b25b-6cff0cd7c2a6 | Email: scoreversebusiness@gmail.com | Role: manager | Approved: true
+ - [profiles] ID: 51e33f07-071b-4c6e-a531-9fe911954f93 | Email: testmanager100@gmail.com | Role: manager | Approved: true
+ - [profiles] ID: 799509f1-7dc5-429a-8c4a-83eacf9a530c | Email: bot@crickarena.local | Role: manager | Approved: true
+ - [profiles] ID: 9ddafbea-d586-4bda-b6ed-0d929a486cc2 | Email: manager13@crickarena.local | Role: manager | Approved: true
+ - [profiles] ID: 91ebd43c-0e1c-4803-b7db-f55edca859c8 | Email: prajwalkorgaonkar10@gmail.com | Role: super_admin | Approved: true

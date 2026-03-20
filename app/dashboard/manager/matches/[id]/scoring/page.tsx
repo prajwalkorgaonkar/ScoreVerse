@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function ScoringPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
+  const { id } = await params
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
@@ -18,7 +19,7 @@ export default async function ScoringPage({ params }: { params: { id: string } }
       team2:teams!matches_team2_id_fkey(*),
       innings(*)
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!match) notFound()
@@ -28,7 +29,7 @@ export default async function ScoringPage({ params }: { params: { id: string } }
   const { data: matchPlayers } = await supabase
     .from('match_players')
     .select('*, player:players(*)')
-    .eq('match_id', params.id)
+    .eq('match_id', id)
 
   const { data: recentBalls } = await supabase
     .from('balls')

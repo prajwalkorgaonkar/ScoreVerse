@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Trophy, Zap, Shield, Users, BarChart3, Share2, ArrowRight, Circle, ChevronRight } from 'lucide-react'
+import HomeScoresSection from '@/components/shared/HomeScoresSection'
+import { createClient } from '@/lib/supabase/client'
 
 const features = [
   { icon: Zap, title: 'Live Ball-by-Ball', desc: 'Real-time scoring with instant updates powered by Supabase Realtime' },
@@ -23,34 +25,54 @@ const stats = [
 
 export default function HomePage() {
   const [ticker, setTicker] = useState(0)
+  const [profile, setProfile] = useState<any>(null)
+  const [authLoaded, setAuthLoaded] = useState(false)
 
   useEffect(() => {
+    // Trap the browser Back button strictly on the homepage to prevent returning to authenticated routes 
+    // Push dummy states so Next.js router doesn't interpret it as a real routing event
+    window.history.pushState({ noBack: true }, '', window.location.href)
+    
+    const handlePopState = (e: PopStateEvent) => {
+      // Re-push immediately so they stay trapped
+      window.history.pushState({ noBack: true }, '', window.location.href)
+      // Scroll smoothly to top instead of navigating backward
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    
+    window.addEventListener('popstate', handlePopState)
+
     const t = setInterval(() => setTicker(p => (p + 1) % 4), 2000)
-    return () => clearInterval(t)
+    
+    // Check if user is logged in natively
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data, error }) => {
+          if (error) {
+            setProfile({
+              id: user.id,
+              full_name: user.user_metadata?.full_name || 'User',
+              role: user.user_metadata?.role || 'manager'
+            })
+          } else if (data) {
+            setProfile(data)
+          }
+          setAuthLoaded(true)
+        })
+      } else {
+        setAuthLoaded(true)
+      }
+    })
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+      clearInterval(t)
+    }
   }, [])
 
   return (
     <div className="min-h-screen bg-arena-dark overflow-x-hidden">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-arena-border/50 bg-arena-dark/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-pitch-600 rounded-lg flex items-center justify-center">
-              <Trophy size={18} className="text-white" />
-            </div>
-            <span className="text-xl font-display text-white tracking-wider">CRICK<span className="text-pitch-500">ARENA</span></span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="px-4 py-2 text-gray-400 hover:text-white text-sm transition-colors">
-              Sign In
-            </Link>
-            <Link href="/auth/register" className="px-5 py-2 bg-pitch-600 hover:bg-pitch-500 text-white text-sm rounded-lg transition-colors font-medium">
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero */}
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
         {/* Background glow */}
@@ -75,7 +97,7 @@ export default function HomePage() {
             transition={{ delay: 0.1 }}
             className="text-7xl md:text-9xl font-display text-white leading-none mb-6"
           >
-            CRICK<span className="gradient-text">ARENA</span>
+            SCORE<span className="gradient-text">VERSE</span>
           </motion.h1>
 
           <motion.p
@@ -94,19 +116,38 @@ export default function HomePage() {
             transition={{ delay: 0.3 }}
             className="flex flex-wrap items-center justify-center gap-4"
           >
-            <Link
-              href="/auth/register"
-              className="group flex items-center gap-2 px-8 py-4 bg-pitch-600 hover:bg-pitch-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-glow-green"
-            >
-              Start Managing Matches
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              href="/auth/login"
-              className="flex items-center gap-2 px-8 py-4 border border-arena-border hover:border-pitch-500 text-white font-medium rounded-xl transition-all duration-200"
-            >
-              Sign In
-            </Link>
+            {authLoaded ? (
+              profile ? (
+                <Link
+                  href={profile.role === 'super_admin' ? '/dashboard/admin' : '/dashboard/manager'}
+                  className="group flex items-center gap-2 px-8 py-4 bg-pitch-600 hover:bg-pitch-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-glow-green"
+                >
+                  Go to Dashboard
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/register"
+                    className="group flex items-center gap-2 px-8 py-4 bg-pitch-600 hover:bg-pitch-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-glow-green"
+                  >
+                    Start Managing Matches
+                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                  <Link
+                    href="/auth/login"
+                    className="flex items-center gap-2 px-8 py-4 border border-arena-border hover:border-pitch-500 text-white font-medium rounded-xl transition-all duration-200"
+                  >
+                    Sign In
+                  </Link>
+                </>
+              )
+            ) : (
+              <div className="flex gap-4">
+                <div className="w-56 h-14 bg-white/5 rounded-xl animate-pulse" />
+                <div className="w-32 h-14 bg-white/5 rounded-xl animate-pulse" />
+              </div>
+            )}
           </motion.div>
         </div>
 
@@ -165,27 +206,13 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* Stats */}
-      <section className="py-16 border-y border-arena-border/50">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              viewport={{ once: true }}
-              className="text-center"
-            >
-              <div className="text-4xl font-display gradient-text-gold">{stat.value}</div>
-              <div className="text-gray-500 text-sm mt-1">{stat.label}</div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      {/* Live Scores */}
+      <HomeScoresSection />
+
+
 
       {/* Features */}
-      <section className="py-24 px-6">
+      <section id="features" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -235,13 +262,23 @@ export default function HomePage() {
             <p className="text-gray-400 mb-8">
               Set up your first tournament in minutes. No credit card required.
             </p>
-            <Link
-              href="/auth/register"
-              className="inline-flex items-center gap-2 px-10 py-4 bg-pitch-600 hover:bg-pitch-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-glow-green text-lg"
-            >
-              Create Free Account
-              <ChevronRight size={20} />
-            </Link>
+            {profile ? (
+              <Link
+                href={profile.role === 'super_admin' ? '/dashboard/admin' : '/dashboard/manager'}
+                className="inline-flex items-center gap-2 px-10 py-4 bg-pitch-600 hover:bg-pitch-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-glow-green text-lg"
+              >
+                Go to Dashboard
+                <ChevronRight size={20} />
+              </Link>
+            ) : (
+              <Link
+                href="/auth/register"
+                className="inline-flex items-center gap-2 px-10 py-4 bg-pitch-600 hover:bg-pitch-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-glow-green text-lg"
+              >
+                Create Free Account
+                <ChevronRight size={20} />
+              </Link>
+            )}
           </motion.div>
         </div>
       </section>
@@ -253,10 +290,10 @@ export default function HomePage() {
             <div className="w-7 h-7 bg-pitch-600 rounded flex items-center justify-center">
               <Trophy size={14} className="text-white" />
             </div>
-            <span className="font-display text-white tracking-wider">CRICK<span className="text-pitch-500">ARENA</span></span>
+            <span className="font-display text-white tracking-wider">SCORE<span className="text-pitch-500">VERSE</span></span>
           </div>
           <p className="text-gray-500 text-sm text-center">
-            © 2024 CrickArena. All rights reserved to{' '}
+            © 2026 ScoreVerse. All rights reserved to{' '}
             <span className="text-pitch-400 font-medium">Prajwal Korgaonkar</span>
           </p>
           <div className="flex items-center gap-4 text-sm text-gray-500">

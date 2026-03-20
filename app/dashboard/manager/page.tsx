@@ -15,7 +15,7 @@ export default async function ManagerDashboardPage() {
     { data: recentMatches },
   ] = await Promise.all([
     supabase.from('matches').select('*', { count: 'exact', head: true }).eq('created_by', user.id),
-    supabase.from('tournaments').select('*', { count: 'exact', head: true }),
+    supabase.from('tournaments').select('*', { count: 'exact', head: true }).eq('created_by', user.id),
     supabase.from('matches')
       .select('*, team1:teams!matches_team1_id_fkey(name,short_name,color), team2:teams!matches_team2_id_fkey(name,short_name,color), innings(*)')
       .eq('status', 'live')

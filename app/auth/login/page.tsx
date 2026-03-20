@@ -1,18 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Trophy, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPass] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Handle callback redirects gracefully
+  useEffect(() => {
+    if (searchParams.get('verified') === 'true') {
+      toast.success('Email confirmed successfully! Please sign in.')
+    } else if (searchParams.get('error') === 'auth_callback_failed') {
+      setError('Confirmation link expired or opened in a different browser. Please try signing in.')
+    }
+  }, [searchParams])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,24 +52,10 @@ export default function LoginPage() {
         return
       }
 
-      // Get role from profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, full_name')
-        .eq('id', data.user.id)
-        .single()
+      toast.success('Signed in! 🏏', { duration: 1500 })
 
-      toast.success('Signed in! 🏏', { duration: 1000 })
-
-      // Navigate — DashboardShell will handle the session client-side
-      const dest = profile?.role === 'super_admin'
-        ? '/dashboard/admin'
-        : '/dashboard/manager'
-
-      // Allow Supabase cookie synchronization to settle gracefully 
-      setTimeout(() => {
-        window.location.href = dest
-      }, 400)
+      router.replace('/')
+      router.refresh()
 
     } catch (err: any) {
       setError(err.message || 'Something went wrong.')
@@ -87,7 +85,7 @@ export default function LoginPage() {
             <Trophy size={30} className="text-white" />
           </motion.div>
           <h1 className="text-5xl font-display text-white tracking-wider">
-            CRICK<span className="gradient-text">ARENA</span>
+            SCORE<span className="gradient-text">VERSE</span>
           </h1>
           <p className="text-gray-500 mt-2 text-sm">Sign in to manage your tournaments</p>
         </div>
@@ -156,7 +154,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-arena-border" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-arena-card px-3 text-xs text-gray-600">New to CrickArena?</span>
+              <span className="bg-arena-card px-3 text-xs text-gray-600">New to ScoreVerse?</span>
             </div>
           </div>
 
@@ -167,7 +165,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-gray-600 text-xs mt-6">
-          © 2024 CrickArena · All rights reserved to <span className="text-gray-500">Prajwal Korgaonkar</span>
+          © 2026 ScoreVerse · All rights reserved to <span className="text-gray-500">Prajwal Korgaonkar</span>
         </p>
       </motion.div>
     </div>

@@ -24,9 +24,9 @@ export default function ResetPasswordPage() {
       const supabase = createClient()
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
-      toast.success('Password updated! Redirecting…', { duration: 1500 })
+      toast.success('Password updated successfully!')
       // Hard redirect so the fresh session is always picked up
-      setTimeout(() => { window.location.href = '/dashboard' }, 1200)
+      setTimeout(() => { window.location.replace('/dashboard') }, 1200)
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to reset password. The link may have expired.')
       setLoading(false)
@@ -57,7 +57,7 @@ export default function ResetPasswordPage() {
             <Trophy size={30} className="text-white" />
           </div>
           <h1 className="text-5xl font-display text-white tracking-wider">
-            CRICK<span className="gradient-text">ARENA</span>
+            SCORE<span className="gradient-text">VERSE</span>
           </h1>
           <p className="text-gray-500 mt-2 text-sm">Set a new password</p>
         </div>
@@ -168,7 +168,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <p className="text-center text-gray-600 text-xs mt-6">
-          © 2024 CrickArena · All rights reserved to{' '}
+          © 2024 ScoreVerse · All rights reserved to{' '}
           <span className="text-gray-500">Prajwal Korgaonkar</span>
         </p>
       </motion.div>

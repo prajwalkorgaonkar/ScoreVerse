@@ -144,7 +144,7 @@ export default function SettingsPage() {
       </button>
 
       <p className="text-xs text-gray-600 text-center pb-4">
-        © 2024 CrickArena — All rights reserved to Prajwal Korgaonkar
+        © 2024 ScoreVerse — All rights reserved to Prajwal Korgaonkar
       </p>
     </div>
   )

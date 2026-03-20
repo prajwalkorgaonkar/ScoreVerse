@@ -5,15 +5,26 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function DashboardRootPage() {
   useEffect(() => {
-    const redirect = async () => {
+    const redirect = () => {
       const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.user) { window.location.href = '/auth/login'; return }
-      const { data: profile } = await supabase
-        .from('profiles').select('role').eq('id', session.user.id).single()
-      window.location.href = profile?.role === 'super_admin'
-        ? '/dashboard/admin'
-        : '/dashboard/manager'
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session?.user) {
+          window.location.replace('/auth/login')
+          return
+        }
+        supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            window.location.replace(
+              profile?.role === 'super_admin'
+                ? '/dashboard/admin'
+                : '/dashboard/manager'
+            )
+          })
+      })
     }
     redirect()
   }, [])

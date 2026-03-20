@@ -83,10 +83,12 @@ export default function MatchScorecard({ match, innings, balls, role }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <Link href={`${base}/matches`} className="flex items-center gap-1.5 text-gray-500 hover:text-white text-sm mb-3 transition-colors">
-            <ArrowLeft size={14} />
-            Back to matches
-          </Link>
+          {role !== 'public' && (
+            <Link href={`${base}/matches`} className="flex items-center gap-1.5 text-gray-500 hover:text-white text-sm mb-3 transition-colors">
+              <ArrowLeft size={14} />
+              Back to matches
+            </Link>
+          )}
           <h1 className="text-3xl font-display text-white tracking-wide">
             <span style={{ color: match.team1?.color }}>{match.team1?.short_name}</span>
             <span className="text-gray-600 mx-3">VS</span>

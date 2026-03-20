@@ -13,13 +13,14 @@ export async function GET(req: NextRequest) {
     const my            = searchParams.get('my') === 'true'
     const limit         = parseInt(searchParams.get('limit') || '20')
     const offset        = parseInt(searchParams.get('offset') || '0')
+    const promoted      = searchParams.get('promoted') === 'true'
 
     let query = supabase
       .from('matches')
       .select(`
-        id, status, total_overs, players_per_team, venue, current_innings,
+        id, status, total_overs, players_per_team, venue, current_innings, description,
         share_token, created_at, toss_winner_id, toss_choice,
-        batting_team_id, bowling_team_id,
+        batting_team_id, bowling_team_id, is_promoted,
         winner_team_id, win_by_runs, win_by_wickets, is_tie,
         team1:teams!matches_team1_id_fkey(id, name, short_name, color),
         team2:teams!matches_team2_id_fkey(id, name, short_name, color),
@@ -31,6 +32,7 @@ export async function GET(req: NextRequest) {
 
     if (status)        query = query.eq('status', status)
     if (tournament_id) query = query.eq('tournament_id', tournament_id)
+    if (promoted)      query = query.eq('is_promoted', true)
 
     if (my) {
       const { data: { user } } = await supabase.auth.getUser()
@@ -39,7 +41,9 @@ export async function GET(req: NextRequest) {
 
     const { data, error, count } = await query
     if (error) return err(error.message, 500)
-    return ok({ matches: data, total: count, limit, offset })
+
+    let matches = data || []
+    return ok({ matches, total: count, limit, offset })
   } catch (e: any) {
     return err(e.message, 500)
   }
@@ -52,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { tournament_id, team1_id, team2_id, total_overs, players_per_team, venue } = body
+    const { tournament_id, team1_id, team2_id, total_overs, players_per_team, venue, description } = body
 
     if (!team1_id)              return err('team1_id is required')
     if (!team2_id)              return err('team2_id is required')
@@ -83,6 +87,7 @@ export async function POST(req: NextRequest) {
         total_overs: overs,
         players_per_team: players,
         venue: venue?.trim() || null,
+        description: description?.trim() || null,
         status: 'scheduled',
         current_innings: 1,
         share_token: generateShareToken(),

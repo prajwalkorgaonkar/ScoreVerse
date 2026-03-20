@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import TournamentsList from '@/components/dashboard/TournamentsList'
 
 export default async function AdminTournamentsPage() {
-  const supabase = createClient()
+  const supabase = createAdminClient()
 
   const { data: tournaments } = await supabase
     .from('tournaments')

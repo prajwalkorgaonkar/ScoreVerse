@@ -1,8 +1,8 @@
-# 🏏 CrickArena
+# 🏏 ScoreVerse
 
 **Premium Cricket Tournament Management Platform**
 
-> © 2024 CrickArena · All rights reserved to **Prajwal Korgaonkar**
+> © 2024 ScoreVerse · All rights reserved to **Prajwal Korgaonkar**
 
 Live ball-by-ball scoring · Role-based dashboards · Real-time public sharing · PDF scorecards
 
@@ -54,7 +54,7 @@ UPDATE profiles SET role = 'super_admin' WHERE email = 'your@email.com';
 ```bash
 # Push to GitHub first
 git init && git add . && git commit -m "Initial commit"
-git remote add origin https://github.com/you/crickarena.git
+git remote add origin https://github.com/you/scoreverse.git
 git push -u origin main
 ```
 
@@ -165,4 +165,4 @@ All endpoints require authentication except the public live view.
 
 ---
 
-© 2024 CrickArena · All rights reserved to **Prajwal Korgaonkar**
+© 2024 ScoreVerse · All rights reserved to **Prajwal Korgaonkar**

@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
             <Trophy size={30} className="text-white" />
           </div>
           <h1 className="text-5xl font-display text-white tracking-wider">
-            CRICK<span className="gradient-text">ARENA</span>
+            SCORE<span className="gradient-text">VERSE</span>
           </h1>
           <p className="text-gray-500 mt-2 text-sm">Reset your password</p>
         </div>
@@ -127,7 +127,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         <p className="text-center text-gray-600 text-xs mt-6">
-          © 2024 CrickArena · All rights reserved to <span className="text-gray-500">Prajwal Korgaonkar</span>
+          © 2024 ScoreVerse · All rights reserved to <span className="text-gray-500">Prajwal Korgaonkar</span>
         </p>
       </motion.div>
     </div>

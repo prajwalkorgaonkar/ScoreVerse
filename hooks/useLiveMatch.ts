@@ -65,8 +65,11 @@ export function useLiveMatch({ match, initialInnings, initialBalls }: UseLiveMat
       if (error) { toast.error(error); return }
       if (!data)  { toast.error('No response from server'); return }
 
-      // Optimistic update
-      setBalls(prev => [data.ball, ...prev].slice(0, 60))
+      // Safe update - handle WebSocket race conditions natively
+      setBalls(prev => {
+        if (prev.find(b => b.id === data.ball.id)) return prev
+        return [data.ball, ...prev].slice(0, 60)
+      })
       setInnings(data.innings)
       setLastBall(data.ball)
       setNextState(data.next_state)
@@ -117,8 +120,12 @@ export function useLiveMatch({ match, initialInnings, initialBalls }: UseLiveMat
     }
   }, [newInnings])
 
+  const displayOverNumber = innings?.total_balls === 0 && innings?.total_overs > 0 
+    ? innings.total_overs - 1 
+    : innings?.total_overs
+
   const currentOverBalls = balls
-    .filter(b => b.over_number === innings?.total_overs)
+    .filter(b => b.over_number === displayOverNumber)
     .slice(0, 6)
     .reverse()
 

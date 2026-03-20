@@ -7,16 +7,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Trophy, LayoutDashboard, Users, Swords, BarChart3,
   Settings, LogOut, Menu, X, ChevronRight, Shield,
-  UserCog, Bell, CircleDot
+  UserCog, Bell, CircleDot, Activity, Home
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 
 const adminNav = [
+  { icon: Home,            label: 'Public Home',     href: '/' },
   { icon: LayoutDashboard, label: 'Overview',        href: '/dashboard/admin' },
   { icon: Trophy,          label: 'Tournaments',     href: '/dashboard/admin/tournaments' },
   { icon: Swords,          label: 'Matches',         href: '/dashboard/admin/matches' },
+  { icon: Activity,        label: 'Live Scores',     href: '/scores' },
   { icon: Users,           label: 'Teams & Players', href: '/dashboard/admin/teams' },
   { icon: UserCog,         label: 'Managers',        href: '/dashboard/admin/managers' },
   { icon: BarChart3,       label: 'Analytics',       href: '/dashboard/admin/analytics' },
@@ -24,9 +26,11 @@ const adminNav = [
 ]
 
 const managerNav = [
+  { icon: Home,            label: 'Public Home',     href: '/' },
   { icon: LayoutDashboard, label: 'Overview',        href: '/dashboard/manager' },
   { icon: Trophy,          label: 'Tournaments',     href: '/dashboard/manager/tournaments' },
   { icon: Swords,          label: 'My Matches',      href: '/dashboard/manager/matches' },
+  { icon: Activity,        label: 'Live Scores',     href: '/scores' },
   { icon: Users,           label: 'Teams & Players', href: '/dashboard/manager/teams' },
   { icon: BarChart3,       label: 'Stats',           href: '/dashboard/manager/stats' },
 ]
@@ -45,26 +49,43 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       const { data: { session } } = await supabase.auth.getSession()
 
       if (!session?.user) {
-        window.location.href = '/auth/login'
+        window.location.replace('/auth/login')
         return
       }
 
-      const { data: p } = await supabase
+      const { data: p, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .single()
 
+      if (error) {
+        console.warn("Dashboard RLS Guard:", error.message)
+        setProfile({
+          id: session.user.id,
+          full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          role: session.user.user_metadata?.role || 'manager'
+        })
+        setChecking(false)
+        return
+      }
+
       if (!p) {
         // Profile not found — might still be creating, retry once
         setTimeout(async () => {
-          const { data: p2 } = await supabase
+          const { data: p2, error: retryError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single()
-          if (!p2) {
-            window.location.href = '/auth/login'
+            
+          if (retryError || !p2) {
+            setProfile({
+              id: session.user.id,
+              full_name: session.user.user_metadata?.full_name || 'User',
+              role: session.user.user_metadata?.role || 'manager'
+            })
+            setChecking(false)
             return
           }
           setProfile(p2)
@@ -81,7 +102,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
-        window.location.href = '/auth/login'
+        window.location.replace('/')
       }
     })
 
@@ -93,7 +114,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     await supabase.auth.signOut()
     toast.success('Signed out')
     setTimeout(() => {
-      window.location.href = '/auth/login'
+      window.location.replace('/')
     }, 400)
   }
 
@@ -112,7 +133,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const nav     = isAdmin ? adminNav : managerNav
 
   if (pathname.startsWith('/dashboard/admin') && !isAdmin) {
-    window.location.href = '/dashboard/manager'
+    window.location.replace('/dashboard/manager')
     return null
   }
 
@@ -148,7 +169,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               <Trophy size={18} className="text-white" />
             </div>
             <span className="text-xl font-display text-white tracking-wider">
-              CRICK<span className="text-pitch-500">ARENA</span>
+              SCORE<span className="text-pitch-500">VERSE</span>
             </span>
           </Link>
         </div>
@@ -199,7 +220,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               className="fixed inset-y-0 left-0 z-50 w-72 bg-arena-card border-r border-arena-border flex flex-col lg:hidden">
               <div className="p-5 border-b border-arena-border flex items-center justify-between">
                 <span className="text-lg font-display text-white tracking-wider">
-                  CRICK<span className="text-pitch-500">ARENA</span>
+                  SCORE<span className="text-pitch-500">VERSE</span>
                 </span>
                 <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-white">
                   <X size={20} />
@@ -230,11 +251,20 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               {nav.find(n => (n.href === '/dashboard/admin' || n.href === '/dashboard/manager' ? pathname === n.href : pathname.startsWith(n.href)))?.label || 'Dashboard'}
             </span>
           </div>
-          <div className="flex items-center gap-3 ml-auto">
+          
+          <div className="flex items-center gap-4 ml-auto">
+            {/* Desktop Horizontal Navbar */}
+            <nav className="hidden md:flex items-center gap-6 mr-4 pr-6 border-r border-arena-border">
+              <Link href="/" className="text-sm font-medium text-gray-400 hover:text-pitch-400 transition-colors">Home</Link>
+              <Link href="/about" className="text-sm font-medium text-gray-400 hover:text-pitch-400 transition-colors">About Us</Link>
+              <Link href="/contact" className="text-sm font-medium text-gray-400 hover:text-pitch-400 transition-colors">Contact</Link>
+              <Link href="/scores" className="text-sm font-medium text-pitch-400 hover:text-pitch-300 transition-colors">Live Scores</Link>
+            </nav>
+
             <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
               <Bell size={18} />
             </button>
-            <div className="h-5 w-px bg-arena-border" />
+            <div className="h-5 w-px bg-arena-border lg:hidden" />
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-pitch-600/30 border border-pitch-600/50 flex items-center justify-center text-pitch-400 text-xs font-bold">
                 {profile?.full_name?.charAt(0).toUpperCase()}
@@ -250,7 +280,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
         <footer className="border-t border-arena-border/50 px-6 py-3 flex-shrink-0">
           <p className="text-center text-gray-700 text-xs">
-            © 2024 CrickArena · All rights reserved to <span className="text-gray-600">Prajwal Korgaonkar</span>
+            © 2026 ScoreVerse · All rights reserved to <span className="text-gray-600">Prajwal Korgaonkar</span>
           </p>
         </footer>
       </div>

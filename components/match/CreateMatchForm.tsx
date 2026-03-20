@@ -15,10 +15,13 @@ interface Props {
   role: string
 }
 
-export default function CreateMatchForm({ tournaments, teams, userId, role }: Props) {
+export default function CreateMatchForm({ tournaments, teams: initTeams, userId, role }: Props) {
   const router = useRouter()
+  const [localTeams, setLocalTeams] = useState(initTeams)
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [customName, setCustomName] = useState({ team1_id: '', team2_id: '' })
+  const [loadingTeam, setLoadingTeam] = useState<string | null>(null)
   const [form, setForm] = useState({
     tournament_id: '',
     team1_id: '',
@@ -26,17 +29,62 @@ export default function CreateMatchForm({ tournaments, teams, userId, role }: Pr
     total_overs: 20,
     players_per_team: 11,
     venue: '',
+    description: '',
   })
 
   const base = role === 'super_admin' ? '/dashboard/admin' : '/dashboard/manager'
 
   const filteredTeams = form.tournament_id
-    ? teams.filter(t => t.tournament_id === form.tournament_id)
-    : teams
+    ? localTeams.filter(t => t.tournament_id === form.tournament_id)
+    : localTeams
 
-  const team1 = teams.find(t => t.id === form.team1_id)
-  const team2 = teams.find(t => t.id === form.team2_id)
+  const team1 = localTeams.find(t => t.id === form.team1_id)
+  const team2 = localTeams.find(t => t.id === form.team2_id)
   const tournament = tournaments.find(t => t.id === form.tournament_id)
+
+  const handleQuickCreate = async (field: 'team1_id' | 'team2_id') => {
+    const name = customName[field].trim()
+    if (!name) return
+
+    // Check if team already exists locally
+    const existing = localTeams.find(t => t.name.toLowerCase() === name.toLowerCase())
+    if (existing) {
+      setForm(f => ({ ...f, [field]: existing.id }))
+      setCustomName(prev => ({ ...prev, [field]: '' }))
+      toast.success('Selected existing team')
+      return
+    }
+
+    setLoadingTeam(field)
+    try {
+      let short_name = name.length > 3 ? name.substring(0, 3).toUpperCase() : name.toUpperCase()
+      const words = name.split(' ')
+      if (words.length > 1) {
+        short_name = words.map(w => w[0]).join('').substring(0, 3).toUpperCase()
+      }
+      
+      const color = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')
+      const supabase = createClient()
+      const { data, error } = await supabase.from('teams').insert({
+        name,
+        short_name,
+        color,
+        created_by: userId,
+        tournament_id: form.tournament_id || null
+      }).select().single()
+
+      if (error) throw error
+
+      setLocalTeams(prev => [...prev, data])
+      setForm(f => ({ ...f, [field]: data.id }))
+      setCustomName(prev => ({ ...prev, [field]: '' }))
+      toast.success(`Team "${name}" created & selected!`)
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create team')
+    } finally {
+      setLoadingTeam(null)
+    }
+  }
 
   const handleCreate = async () => {
     if (!form.team1_id || !form.team2_id) return toast.error('Please select both teams')
@@ -169,18 +217,53 @@ export default function CreateMatchForm({ tournaments, teams, userId, role }: Pr
               </div>
 
               {['team1_id', 'team2_id'].map((field, fi) => (
-                <div key={field}>
-                  <label className="block text-sm text-gray-400 mb-2">
-                    {fi === 0 ? 'Team 1' : 'Team 2'}
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                <div key={field} className="bg-arena-card/30 p-4 rounded-2xl border border-arena-border">
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="text-sm text-gray-400 font-medium">
+                      {fi === 0 ? 'Team 1' : 'Team 2'}
+                    </label>
+                    {form[field as keyof typeof form] && (
+                      <span className="text-xs bg-pitch-600/20 text-pitch-400 px-2 py-1 rounded-lg">
+                        Selected: {localTeams.find(t => t.id === form[field as keyof typeof form])?.name}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Inline Creation Input */}
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      placeholder="Type custom team name..."
+                      className="input-arena flex-1"
+                      value={customName[field as keyof typeof customName]}
+                      onChange={(e) => setCustomName(prev => ({...prev, [field]: e.target.value}))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleQuickCreate(field as 'team1_id' | 'team2_id')
+                        }
+                      }}
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => handleQuickCreate(field as 'team1_id' | 'team2_id')} 
+                      disabled={loadingTeam === field || !customName[field as keyof typeof customName].trim()}
+                      className="px-4 bg-pitch-600 hover:bg-pitch-500 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors min-w-[80px]"
+                    >
+                      {loadingTeam === field ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Add'}
+                    </button>
+                  </div>
+
+                  <div className="text-xs text-center text-gray-600 mb-3">— OR SELECT EXISTING —</div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto pr-1">
                     {filteredTeams
                       .filter(t => field === 'team1_id' ? t.id !== form.team2_id : t.id !== form.team1_id)
                       .map(team => (
                         <button
                           key={team.id}
                           onClick={() => setForm(f => ({ ...f, [field]: team.id }))}
-                          className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2 ${
+                          className={`p-2 rounded-xl border text-left transition-all flex items-center gap-2 ${
                             form[field as keyof typeof form] === team.id
                               ? 'border-pitch-500 bg-pitch-500/10'
                               : 'border-arena-border hover:border-gray-600'
@@ -190,13 +273,13 @@ export default function CreateMatchForm({ tournaments, teams, userId, role }: Pr
                             className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{ backgroundColor: team.color }}
                           />
-                          <span className="text-sm font-medium text-white truncate">{team.short_name}</span>
+                          <span className="text-xs font-medium text-white truncate">{team.short_name}</span>
                         </button>
                       ))
                     }
                     {filteredTeams.length === 0 && (
-                      <p className="col-span-2 text-gray-500 text-sm py-4 text-center">
-                        No teams available. Create teams first.
+                      <p className="col-span-full text-gray-500 text-xs py-2 text-center">
+                        No existing teams found.
                       </p>
                     )}
                   </div>
@@ -302,6 +385,18 @@ export default function CreateMatchForm({ tournaments, teams, userId, role }: Pr
                   onChange={e => setForm(f => ({ ...f, venue: e.target.value }))}
                   className="input-arena"
                   placeholder="e.g. Wankhede Stadium, Mumbai"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">
+                  Match Description <span className="text-gray-600">(optional)</span>
+                </label>
+                <textarea
+                  value={form.description}
+                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  className="input-arena min-h-[80px] py-3"
+                  placeholder="Rules, match info, or special context..."
                 />
               </div>
 

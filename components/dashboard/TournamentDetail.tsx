@@ -63,25 +63,38 @@ export default function TournamentDetail({ tournament, teams: initTeams, matches
     let runsScored = 0, oversFaced = 0, runsConceded = 0, oversBowled = 0
     teamMatches.forEach(m => {
       const isTeam1 = m.team1_id === team.id
-      const battingInnings = m.innings?.find((inn: any) =>
+      const batInn = m.innings?.find((inn: any) =>
         inn.batting_team_id === team.id && inn.innings_number === (isTeam1 ? 1 : 2)
       )
-      const bowlingInnings = m.innings?.find((inn: any) =>
+      const bowlInn = m.innings?.find((inn: any) =>
         inn.bowling_team_id === team.id
       )
-      if (battingInnings) {
-        runsScored += battingInnings.total_runs
-        oversFaced += battingInnings.total_overs + battingInnings.total_balls / 6
+      const matchQuota = m.total_overs || 20
+      const isAllOut = (inn: any) => inn.total_wickets >= (m.players_per_team ? m.players_per_team - 1 : 10)
+
+      if (batInn) {
+        runsScored += batInn.total_runs
+        oversFaced += isAllOut(batInn) ? matchQuota : (batInn.total_overs + batInn.total_balls / 6.0)
       }
-      if (bowlingInnings) {
-        runsConceded += bowlingInnings.total_runs
-        oversBowled += bowlingInnings.total_overs + bowlingInnings.total_balls / 6
+      if (bowlInn) {
+        runsConceded += bowlInn.total_runs
+        oversBowled += isAllOut(bowlInn) ? matchQuota : (bowlInn.total_overs + bowlInn.total_balls / 6.0)
       }
     })
 
     const nrr = calculateNRR(runsScored, oversFaced, runsConceded, oversBowled)
 
-    return { team, played, won, lost, tied, points, nrr }
+    // Form Guide: Last 3 chronologically completed matches
+    const completedMatchesChronological = teamMatches
+      .filter(m => m.status === 'completed')
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    
+    const form = completedMatchesChronological.slice(0, 3).map(m => {
+      if (m.is_tie) return 'T'
+      return m.winner_team_id === team.id ? 'W' : 'L'
+    })
+
+    return { team, played, won, lost, tied, points, nrr, form }
   }).sort((a, b) => b.points - a.points || b.nrr - a.nrr)
 
   const tabs = [
@@ -257,38 +270,53 @@ export default function TournamentDetail({ tournament, teams: initTeams, matches
             <div className="py-12 text-center text-gray-500">No completed matches to calculate points</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="arena-table w-full">
+              <table className="arena-table w-full whitespace-nowrap text-sm">
                 <thead>
-                  <tr>
-                    <th className="text-left">#</th>
-                    <th className="text-left">Team</th>
-                    <th>P</th>
-                    <th>W</th>
-                    <th>L</th>
-                    <th>T</th>
-                    <th>Pts</th>
-                    <th>NRR</th>
+                  <tr className="bg-arena-dark/50">
+                    <th className="pl-5 text-left text-xs text-gray-400 uppercase tracking-widest py-4">#</th>
+                    <th className="text-left text-xs text-gray-400 uppercase tracking-widest py-4">Team</th>
+                    <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-12 flex-none">P</th>
+                    <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-12 flex-none">W</th>
+                    <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-12 flex-none">L</th>
+                    <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-12 flex-none">T</th>
+                    <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-24">Form</th>
+                    <th className="text-center text-xs text-gray-400 uppercase tracking-widest w-20">NRR</th>
+                    <th className="text-center text-xs text-amber-400 uppercase tracking-widest w-16 font-bold">Pts</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pointsTable.map((row, i) => (
-                    <tr key={row.team.id} className={i === 0 ? 'bg-pitch-500/5' : ''}>
-                      <td className="text-gray-500 font-medium">{i + 1}</td>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: row.team.color }} />
+                    <tr key={row.team.id} className="border-t border-arena-border/30 hover:bg-white/5 transition-colors">
+                      <td className="pl-5 py-3 text-gray-500 font-medium">{i + 1}</td>
+                      <td className="py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 rounded flex-shrink-0" style={{ backgroundColor: row.team.color }} />
                           <span className="text-white font-medium">{row.team.name}</span>
                           <span className="text-gray-600 text-xs">{row.team.short_name}</span>
                         </div>
                       </td>
-                      <td className="text-center text-gray-300">{row.played}</td>
-                      <td className="text-center text-pitch-400 font-medium">{row.won}</td>
-                      <td className="text-center text-crimson-400">{row.lost}</td>
-                      <td className="text-center text-amber-400">{row.tied}</td>
-                      <td className="text-center font-bold text-white text-lg font-display">{row.points}</td>
-                      <td className={cn('text-center font-mono text-sm', row.nrr >= 0 ? 'text-pitch-400' : 'text-crimson-400')}>
+                      <td className="text-center py-3 text-gray-300">{row.played}</td>
+                      <td className="text-center py-3 text-pitch-400 font-medium">{row.won}</td>
+                      <td className="text-center py-3 text-crimson-400">{row.lost}</td>
+                      <td className="text-center py-3 text-amber-400">{row.tied}</td>
+                      <td className="text-center py-3">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {row.form.map((res: string, idx: number) => (
+                            <span key={idx} className={cn('w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold', {
+                              'bg-pitch-500/20 text-pitch-400': res === 'W',
+                              'bg-crimson-500/20 text-crimson-400': res === 'L',
+                              'bg-amber-500/20 text-amber-400': res === 'T',
+                            })}>
+                              {res}
+                            </span>
+                          ))}
+                          {row.form.length === 0 && <span className="text-gray-600 text-xs">-</span>}
+                        </div>
+                      </td>
+                      <td className={cn('text-center py-3 font-mono text-xs', row.nrr >= 0 ? 'text-pitch-400' : 'text-crimson-400')}>
                         {row.nrr >= 0 ? '+' : ''}{row.nrr.toFixed(3)}
                       </td>
+                      <td className="text-center py-3 font-bold text-white bg-amber-500/5">{row.points}</td>
                     </tr>
                   ))}
                 </tbody>

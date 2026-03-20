@@ -128,15 +128,13 @@ export default function TeamsManager({ teams: initTeams, tournaments, role }: Pr
           <h1 className="text-3xl font-display text-white tracking-wide">TEAMS & <span className="gradient-text">PLAYERS</span></h1>
           <p className="text-gray-500 mt-1">{teams.length} teams · {teams.reduce((s, t) => s + (t.players?.length || 0), 0)} players</p>
         </div>
-        {isAdmin && (
-          <button
-            onClick={() => setShowAddTeam(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors"
-          >
-            <Plus size={16} />
-            New Team
-          </button>
-        )}
+        <button
+          onClick={() => setShowAddTeam(true)}
+          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors"
+        >
+          <Plus size={16} />
+          New Team
+        </button>
       </div>
 
       {/* Add Team Form */}
@@ -210,15 +208,13 @@ export default function TeamsManager({ teams: initTeams, tournaments, role }: Pr
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {isAdmin && (
-                    <button
-                      onClick={e => { e.stopPropagation(); deleteTeam(team.id) }}
-                      disabled={deletingId === team.id}
-                      className="p-1.5 text-gray-600 hover:text-crimson-400 hover:bg-crimson-500/10 rounded-lg transition-colors"
-                    >
-                      {deletingId === team.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                    </button>
-                  )}
+                  <button
+                    onClick={e => { e.stopPropagation(); deleteTeam(team.id) }}
+                    disabled={deletingId === team.id}
+                    className="p-1.5 text-gray-600 hover:text-crimson-400 hover:bg-crimson-500/10 rounded-lg transition-colors"
+                  >
+                    {deletingId === team.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                  </button>
                   {expandedTeam === team.id ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
                 </div>
               </div>

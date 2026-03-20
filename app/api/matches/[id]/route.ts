@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { requireAuth, requireAdmin, ok, err } from '@/lib/api-helpers'
 
 // GET /api/matches/[id]
@@ -46,7 +46,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       'status', 'toss_winner_id', 'toss_choice',
       'batting_team_id', 'bowling_team_id', 'current_innings',
       'winner_team_id', 'win_by_runs', 'win_by_wickets', 'is_tie',
-      'player_of_match', 'venue',
+      'venue', 'is_promoted', 'description'
     ]
     const updates: Record<string, any> = {}
     for (const key of allowed) {
@@ -66,11 +66,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return err('toss_choice must be bat or bowl')
     }
 
-    const supabase = createClient()
+    const adminClient = createAdminClient()
 
     // Check ownership (non-admins can only update own matches)
     if (user.role !== 'super_admin') {
-      const { data: existing } = await supabase
+      const { data: existing } = await adminClient
         .from('matches')
         .select('created_by')
         .eq('id', resolvedParams.id)
@@ -78,7 +78,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (existing?.created_by !== user.id) return err('Forbidden', 403)
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await adminClient
       .from('matches')
       .update(updates)
       .eq('id', resolvedParams.id)
@@ -92,15 +92,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-// DELETE /api/matches/[id]  — Super Admin only
+// DELETE /api/matches/[id]  — Super Admin or Match Creator
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  const { error: authError } = await requireAdmin()
+  const { user, error: authError } = await requireAuth()
   if (authError) return authError
 
   try {
-    const supabase = createClient()
-    const { error } = await supabase.from('matches').delete().eq('id', resolvedParams.id)
+    const adminClient = createAdminClient()
+    
+    if (user.role !== 'super_admin') {
+      const { data: existing } = await adminClient
+        .from('matches')
+        .select('created_by')
+        .eq('id', resolvedParams.id)
+        .single()
+      if (existing?.created_by !== user.id) return err('Forbidden: You can only delete your own matches.', 403)
+    }
+
+    const { error } = await adminClient.from('matches').delete().eq('id', resolvedParams.id)
     if (error) return err(error.message, 500)
     return ok({ message: 'Match deleted' })
   } catch (e: any) {

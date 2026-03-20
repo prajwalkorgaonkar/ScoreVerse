@@ -153,21 +153,35 @@ export default function LiveScoring({ match, currentInnings: initInnings, matchP
                 </div>
               )}
             </div>
-            {innings?.target && (
+            {matchResult || match.status === 'completed' ? (
+              <div className="text-right">
+                 <div className="text-xs text-pitch-500 mb-1">Match Result</div>
+                 <div className="text-2xl font-display text-pitch-400">
+                    {(matchResult || match).is_tie ? 'Tied' :
+                     `${(matchResult || match).winner_team_id === match.team1_id ? match.team1.short_name : match.team2.short_name} Won`}
+                 </div>
+                 <div className="text-xs text-pitch-400 mt-1 font-medium">
+                    {(matchResult || match).win_by_runs ? `by ${(matchResult || match).win_by_runs} runs` : `by ${(matchResult || match).win_by_wickets} wickets`}
+                 </div>
+              </div>
+            ) : innings?.target ? (
               <div className="text-right">
                 <div className="text-xs text-gray-500 mb-1">Target</div>
                 <div className="text-3xl font-display text-amber-400">{innings.target}</div>
-                <div className="text-xs text-amber-400 mt-1">
+                <div className="text-xs text-amber-400 mt-1 font-medium">
                   Need {Math.max(0, innings.target - innings.total_runs)} from{' '}
                   {Math.max(0, (match.total_overs - innings.total_overs) * 6 - innings.total_balls)} balls
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
 
-          {/* Current over balls */}
           <div className="mt-4 flex items-center gap-2">
-            <span className="text-xs text-gray-500">Over {innings?.total_overs + 1}:</span>
+            <span className="text-xs text-gray-500">
+              {innings?.total_balls === 0 && innings?.total_overs > 0 
+                ? `Over ${innings.total_overs} Complete:` 
+                : `Over ${(innings?.total_overs || 0) + 1}:`}
+            </span>
             <div className="flex gap-1.5">
               {currentOverBalls.map((ball: any) => (
                 <motion.div key={ball.id} initial={{ scale: 0 }} animate={{ scale: 1 }}

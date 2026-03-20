@@ -52,12 +52,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ mat
 
     if (!innings)                        return err('Innings not found', 404)
     if (innings.is_completed)            return err('Innings is already completed')
-    if (innings.match?.status !== 'live') return err('Match is not live')
+    if (innings.match?.status !== 'live' && innings.match?.status !== 'innings_break') return err('Match is not active')
     if (innings.match_id !== resolvedParams.matchId) return err('Innings does not belong to this match')
 
     // Ownership check
     if (user.role !== 'super_admin' && innings.match?.created_by !== user.id) {
       return err('Forbidden', 403)
+    }
+
+    // Auto-resume from innings_break on first ball of new innings
+    if (innings.match?.status === 'innings_break') {
+      await supabase.from('matches').update({ status: 'live' }).eq('id', resolvedParams.matchId)
     }
 
     // A "legal" delivery (counts toward overs) unless it's a wide or no-ball

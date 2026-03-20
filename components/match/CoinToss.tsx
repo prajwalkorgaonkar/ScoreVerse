@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Loader2, Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function CoinToss({ match, onComplete }: Props) {
+  const router = useRouter()
   const [phase, setPhase] = useState<'select' | 'flipping' | 'result'>(
     match.toss_winner_id ? 'result' : 'select'
   )
@@ -53,6 +55,7 @@ export default function CoinToss({ match, onComplete }: Props) {
       }).eq('id', match.id)
 
       toast.success('Toss recorded!')
+      router.refresh()
       onComplete()
     } catch (err: any) {
       toast.error(err.message || 'Failed to save toss')

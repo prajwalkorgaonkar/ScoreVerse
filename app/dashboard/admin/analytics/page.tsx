@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AnalyticsDashboard from '@/components/dashboard/AnalyticsDashboard'
 
@@ -16,9 +16,9 @@ export default async function AnalyticsPage() {
       </div>
     )
   }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'super_admin') redirect('/dashboard/manager')
+  if (user.user_metadata?.role !== 'super_admin') redirect('/dashboard/manager')
 
+  const adminClient = createAdminClient()
   const [
     { data: matchesByStatus },
     { data: recentBalls },
@@ -26,11 +26,11 @@ export default async function AnalyticsPage() {
     { count: totalMatches },
     { count: totalPlayers },
   ] = await Promise.all([
-    supabase.from('matches').select('status'),
-    supabase.from('balls').select('runs, is_wicket, extra_type').limit(1000).order('timestamp', { ascending: false }),
-    supabase.from('tournaments').select('*', { count: 'exact', head: true }),
-    supabase.from('matches').select('*', { count: 'exact', head: true }),
-    supabase.from('players').select('*', { count: 'exact', head: true }),
+    adminClient.from('matches').select('status'),
+    adminClient.from('balls').select('runs, is_wicket, extra_type').limit(1000).order('timestamp', { ascending: false }),
+    adminClient.from('tournaments').select('*', { count: 'exact', head: true }),
+    adminClient.from('matches').select('*', { count: 'exact', head: true }),
+    adminClient.from('players').select('*', { count: 'exact', head: true }),
   ])
 
   const runDist: Record<string, number> = { '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '6': 0, 'W': 0, 'Extras': 0 }

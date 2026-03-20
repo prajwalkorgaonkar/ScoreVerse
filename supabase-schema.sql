@@ -1,5 +1,5 @@
 -- ╔═══════════════════════════════════════════════════════════════════╗
--- ║           CrickArena — Complete Database Schema                  ║
+-- ║           ScoreVerse — Complete Database Schema                  ║
 -- ║           Run this in Supabase SQL Editor                        ║
 -- ╚═══════════════════════════════════════════════════════════════════╝
 
@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   email       TEXT UNIQUE NOT NULL,
   full_name   TEXT NOT NULL,
   role        TEXT NOT NULL DEFAULT 'manager' CHECK (role IN ('super_admin','manager')),
+  is_approved BOOLEAN DEFAULT false,
   avatar_url  TEXT,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
@@ -23,8 +24,16 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "profiles_update_own" ON profiles FOR UPDATE USING (auth.uid() = id);
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'super_admin'
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
 CREATE POLICY "profiles_admin_all" ON profiles FOR ALL
-  USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'super_admin'));
+  USING (public.is_super_admin());
 
 -- ══════════════════════════════════════════════
 -- TOURNAMENTS
@@ -35,7 +44,8 @@ CREATE TABLE IF NOT EXISTS tournaments (
   description TEXT,
   format      TEXT NOT NULL DEFAULT 'T20' CHECK (format IN ('T20','ODI','Test','Custom')),
   status      TEXT NOT NULL DEFAULT 'upcoming' CHECK (status IN ('upcoming','active','completed')),
-  start_date  DATE NOT NULL,
+  is_promoted BOOLEAN DEFAULT false,
+  start_date  TIMESTAMPTZ NOT NULL,
   end_date    DATE,
   created_by  UUID REFERENCES profiles(id),
   created_at  TIMESTAMPTZ DEFAULT NOW(),
@@ -99,6 +109,8 @@ CREATE TABLE IF NOT EXISTS matches (
   total_overs      INTEGER NOT NULL DEFAULT 20,
   players_per_team INTEGER NOT NULL DEFAULT 11,
   venue            TEXT,
+  description      TEXT,
+  is_promoted      BOOLEAN DEFAULT false,
   status           TEXT NOT NULL DEFAULT 'scheduled'
                      CHECK (status IN ('scheduled','toss','live','innings_break','completed')),
   toss_winner_id   UUID REFERENCES teams(id),
@@ -201,7 +213,7 @@ CREATE POLICY "match_players_modify_auth" ON match_players FOR ALL USING (auth.r
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, email, full_name, role)
+  INSERT INTO public.profiles (id, email, full_name, role)
   VALUES (
     NEW.id,
     NEW.email,

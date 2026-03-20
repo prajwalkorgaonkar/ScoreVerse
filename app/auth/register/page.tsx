@@ -117,7 +117,7 @@ export default function RegisterPage() {
             <Trophy size={30} className="text-white" />
           </motion.div>
           <h1 className="text-5xl font-display text-white tracking-wider">
-            CRICK<span className="gradient-text">ARENA</span>
+            SCORE<span className="gradient-text">VERSE</span>
           </h1>
           <p className="text-gray-500 mt-2 text-sm">Create your manager account</p>
         </div>
@@ -228,8 +228,8 @@ export default function RegisterPage() {
           </Link>
         </div>
 
-        <p className="text-center text-gray-600 text-xs mt-6">
-          © 2024 CrickArena · All rights reserved to{' '}
+        <p className="text-center text-gray-600 text-xs mt-6 relative z-10">
+          © 2026 ScoreVerse · All rights reserved to{' '}
           <span className="text-gray-500">Prajwal Korgaonkar</span>
         </p>
       </motion.div>

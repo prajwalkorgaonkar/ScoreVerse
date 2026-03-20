@@ -1,8 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import MatchesList from '@/components/match/MatchesList'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminMatchesPage() {
-  const supabase = createClient()
+  const supabase = createAdminClient()
 
   const { data: matches } = await supabase
     .from('matches')

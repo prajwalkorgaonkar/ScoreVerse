@@ -1,5 +1,5 @@
 /**
- * useApi — typed fetch wrapper for all CrickArena API routes.
+ * useApi — typed fetch wrapper for all ScoreVerse API routes.
  * Handles auth headers, JSON parsing, and error normalisation.
  */
 
@@ -79,7 +79,7 @@ export const playersApi = {
 // ─── Matches ───────────────────────────────────────────────────────────────
 
 export const matchesApi = {
-  list: (params?: { status?: string; tournament_id?: string; my?: boolean; limit?: number }) => {
+  list: (params?: { status?: string; tournament_id?: string; my?: boolean; limit?: number; promoted?: string | boolean }) => {
     const q = new URLSearchParams(params as any).toString()
     return apiFetch<{ matches: any[]; total: number }>(`/api/matches${q ? `?${q}` : ''}`)
   },

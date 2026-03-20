@@ -15,14 +15,12 @@ export async function requireAuth(): Promise<{ user: AuthedUser; error: null } |
     return { user: null, error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
   return {
-    user: { id: user.id, email: user.email!, role: profile?.role || 'manager' },
+    user: { 
+      id: user.id, 
+      email: user.email || '', 
+      role: user.user_metadata?.role || 'manager' 
+    },
     error: null,
   }
 }

@@ -3,11 +3,11 @@ import { Toaster } from 'react-hot-toast'
 import '@/styles/globals.css'
 
 export const metadata: Metadata = {
-  title: 'CrickArena — Live Cricket Tournament Management',
+  title: 'ScoreVerse — Live Cricket Tournament Management',
   description: 'Premium cricket tournament management with live ball-by-ball scoring',
   keywords: 'cricket, tournament, live scoring, cricket management',
   openGraph: {
-    title: 'CrickArena',
+    title: 'ScoreVerse',
     description: 'Premium cricket tournament management platform',
     type: 'website',
   },
