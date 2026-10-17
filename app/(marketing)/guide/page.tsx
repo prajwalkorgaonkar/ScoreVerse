@@ -1,5 +1,4 @@
 import { Smartphone, Trophy, Users, Shield, Activity, FileText, Zap, Globe, Plus, Flag, PenTool } from 'lucide-react'
-import PublicNavbar from '@/components/shared/PublicNavbar'
 
 export const metadata = {
   title: 'Platform Guide — ScoreVerse',
@@ -9,8 +8,6 @@ export const metadata = {
 export default function GuidePage() {
   return (
     <div className="bg-arena-dark min-h-screen">
-      <PublicNavbar />
-      
       <div className="pt-32 pb-24 px-6 relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pitch-600/10 blur-[120px] rounded-full pointer-events-none" />

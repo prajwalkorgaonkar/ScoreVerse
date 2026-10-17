@@ -21,10 +21,33 @@ export default function PublicMatchCard({ match }: { match: any }) {
   // Format innings
   const inn1 = match.innings?.find((i: any) => i.innings_number === 1)
   const inn2 = match.innings?.find((i: any) => i.innings_number === 2)
-  const activeInnings = (match.status === 'live' || match.status === 'innings_break') ? (inn2 || inn1) : null
-  
-  const t1Inn = match.innings?.find((i: any) => i.batting_team_id === team1?.id)
-  const t2Inn = match.innings?.find((i: any) => i.batting_team_id === team2?.id)
+  const activeInnings = (match.status === 'live' || match.status === 'innings_break')
+    ? (match.innings?.find((i: any) => i.innings_number === match.current_innings) || inn2 || inn1)
+    : null
+  const firstBattingTeamId = inn1?.batting_team_id || match.batting_team_id || (
+    match.toss_winner_id
+      ? match.toss_choice === 'bat'
+        ? match.toss_winner_id
+        : match.toss_winner_id === team1?.id ? team2?.id : team1?.id
+      : null
+  )
+  const secondBattingTeamId = inn2?.batting_team_id || (
+    firstBattingTeamId === team1?.id ? team2?.id : firstBattingTeamId === team2?.id ? team1?.id : null
+  )
+  const activeBattingTeamId = activeInnings?.batting_team_id
+    || (match.current_innings === 2 ? secondBattingTeamId : firstBattingTeamId)
+  const getTeamInnings = (teamId?: string) => {
+    if (!teamId) return undefined
+    if (activeInnings && activeBattingTeamId === teamId) return activeInnings
+    return [...(match.innings || [])]
+      .filter((innings: any) => innings.batting_team_id === teamId)
+      .sort((a: any, b: any) => b.innings_number - a.innings_number)[0]
+      || (firstBattingTeamId === teamId ? inn1 : secondBattingTeamId === teamId ? inn2 : undefined)
+  }
+  const t1Inn = getTeamInnings(team1?.id)
+  const t2Inn = getTeamInnings(team2?.id)
+  const activeScoreShownWithTeam = activeInnings
+    && (t1Inn?.id === activeInnings.id || t2Inn?.id === activeInnings.id)
 
   // Fetch initial balls if they aren't provided by parent
   useEffect(() => {
@@ -84,10 +107,9 @@ export default function PublicMatchCard({ match }: { match: any }) {
             <span className="text-cyan-400 font-semibold text-lg">{team1?.name}</span>
           </div>
           {(() => {
-            const hasData = t1Inn || (match.status === 'live' && match.batting_team_id === team1?.id)
-            if (!hasData && match.status !== 'completed' && match.status !== 'innings_break') return null
+            if (!t1Inn && !(match.status === 'live' && match.batting_team_id === team1?.id)) return null
             
-            const inn = t1Inn || { total_runs: 0, total_wickets: 0, total_balls: 0 }
+            const inn = t1Inn || { total_runs: 0, total_wickets: 0, total_overs: 0, total_balls: 0 }
             return (
               <div className="text-right">
                 <span className="text-2xl font-display text-white">{inn.total_runs}/{inn.total_wickets}</span>
@@ -104,10 +126,9 @@ export default function PublicMatchCard({ match }: { match: any }) {
             <span className="text-amber-400 font-semibold text-lg">{team2?.name}</span>
           </div>
           {(() => {
-            const hasData = t2Inn || (match.status === 'live' && match.batting_team_id === team2?.id)
-            if (!hasData && match.status !== 'completed' && match.status !== 'innings_break') return null
+            if (!t2Inn && !(match.status === 'live' && match.batting_team_id === team2?.id)) return null
             
-            const inn = t2Inn || { total_runs: 0, total_wickets: 0, total_balls: 0 }
+            const inn = t2Inn || { total_runs: 0, total_wickets: 0, total_overs: 0, total_balls: 0 }
             return (
               <div className="text-right">
                 <span className="text-2xl font-display text-white">{inn.total_runs}/{inn.total_wickets}</span>
@@ -117,6 +138,20 @@ export default function PublicMatchCard({ match }: { match: any }) {
           })()}
         </div>
       </div>
+
+      {activeInnings && !activeScoreShownWithTeam && (
+        <div className="mt-4 flex items-center justify-between border-t border-arena-border pt-3">
+          <span className="text-xs text-gray-400">
+            Innings {activeInnings.innings_number} · Current score
+          </span>
+          <span className="font-display text-xl text-white">
+            {activeInnings.total_runs}/{activeInnings.total_wickets}
+            <span className="ml-2 text-xs font-mono text-gray-500">
+              ({activeInnings.total_overs}.{activeInnings.total_balls} ov)
+            </span>
+          </span>
+        </div>
+      )}
 
       {/* Result Footer */}
       {match.status === 'completed' && match.winner_team_id && (
@@ -140,7 +175,7 @@ export default function PublicMatchCard({ match }: { match: any }) {
             <span className="text-gray-400">Current Run Rate</span>
             <span className="font-mono text-white font-medium">
               {(() => {
-                const activeInn = inn2 || inn1
+                const activeInn = activeInnings
                 if (!activeInn) return '0.00'
                 const totalBallsBowled = activeInn.total_overs * 6 + activeInn.total_balls
                 return totalBallsBowled > 0 ? (activeInn.total_runs / (totalBallsBowled / 6)).toFixed(2) : '0.00'

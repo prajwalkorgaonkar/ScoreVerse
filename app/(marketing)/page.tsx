@@ -29,19 +29,6 @@ export default function HomePage() {
   const [authLoaded, setAuthLoaded] = useState(false)
 
   useEffect(() => {
-    // Trap the browser Back button strictly on the homepage to prevent returning to authenticated routes 
-    // Push dummy states so Next.js router doesn't interpret it as a real routing event
-    window.history.pushState({ noBack: true }, '', window.location.href)
-
-    const handlePopState = (e: PopStateEvent) => {
-      // Re-push immediately so they stay trapped
-      window.history.pushState({ noBack: true }, '', window.location.href)
-      // Scroll smoothly to top instead of navigating backward
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-
-    window.addEventListener('popstate', handlePopState)
-
     const t = setInterval(() => setTicker(p => (p + 1) % 4), 2000)
 
     // Check if user is logged in natively
@@ -66,7 +53,6 @@ export default function HomePage() {
     })
 
     return () => {
-      window.removeEventListener('popstate', handlePopState)
       clearInterval(t)
     }
   }, [])

@@ -5,11 +5,10 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Trophy, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 
 function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPass] = useState('')
@@ -31,11 +30,11 @@ function LoginForm() {
     setError('')
     if (!email || !password) { setError('Please fill in all fields'); return }
 
-    setLoading(true)
     try {
+      setLoading(true)
       const supabase = createClient()
 
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -48,17 +47,24 @@ function LoginForm() {
         } else {
           setError(signInError.message)
         }
-        setLoading(false)
         return
       }
 
+      const response = await fetch('/api/auth/session', { cache: 'no-store' })
+      const result: { destination?: string; error?: string } = await response.json()
+      if (!response.ok || !result.destination) {
+        throw new Error(result.error || 'Unable to load your account. Please try again.')
+      }
+
+      const redirectTo = searchParams.get('redirectTo')
+      const isDashboardRedirect = redirectTo === '/dashboard' || redirectTo?.startsWith('/dashboard/')
+      const destination = isDashboardRedirect ? redirectTo : result.destination
+
       toast.success('Signed in! 🏏', { duration: 1500 })
-
-      router.replace('/')
-      router.refresh()
-
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong.')
+      window.location.replace(destination)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
       setLoading(false)
     }
   }
@@ -184,4 +190,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

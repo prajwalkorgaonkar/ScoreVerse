@@ -81,7 +81,9 @@ export const playersApi = {
 export const matchesApi = {
   list: (params?: { status?: string; tournament_id?: string; my?: boolean; limit?: number; promoted?: string | boolean }) => {
     const q = new URLSearchParams(params as any).toString()
-    return apiFetch<{ matches: any[]; total: number }>(`/api/matches${q ? `?${q}` : ''}`)
+    return apiFetch<{ matches: any[]; total: number }>(`/api/matches${q ? `?${q}` : ''}`, {
+      cache: 'no-store',
+    })
   },
   get: (id: string) => apiFetch<{ match: any }>(`/api/matches/${id}`),
   create: (body: Record<string, any>) =>

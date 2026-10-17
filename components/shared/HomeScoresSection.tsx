@@ -11,13 +11,27 @@ import { createClient } from '@/lib/supabase/client'
 export default function HomeScoresSection() {
   const [matches, setMatches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
-    // Initial fetch
-    matchesApi.list({ limit: 3, promoted: 'true' })
-      .then(({ data }) => setMatches(data?.matches || []))
-      .finally(() => setLoading(false))
+    const supabase = createClient()
+    let refreshInProgress = false
+
+    const refreshMatches = async () => {
+      if (refreshInProgress || document.visibilityState === 'hidden') return
+      refreshInProgress = true
+      try {
+        const { data, error } = await matchesApi.list({ limit: 3, promoted: 'true' })
+        if (error) throw new Error(error)
+        setMatches(data?.matches || [])
+      } catch (error) {
+        console.error('Failed to refresh Match Centre scores:', error)
+      } finally {
+        setLoading(false)
+        refreshInProgress = false
+      }
+    }
+
+    void refreshMatches()
 
     // Real-time subscription with self-healing match identification
     const channel = supabase.channel('home-matches')
@@ -64,10 +78,15 @@ export default function HomeScoresSection() {
       })
       .subscribe()
 
+    const refreshInterval = window.setInterval(refreshMatches, 5000)
+    document.addEventListener('visibilitychange', refreshMatches)
+
     return () => {
+      window.clearInterval(refreshInterval)
+      document.removeEventListener('visibilitychange', refreshMatches)
       supabase.removeChannel(channel)
     }
-  }, [supabase])
+  }, [])
 
   return (
     <section className="py-24 px-6 relative border-y border-arena-border/50 bg-arena-dark/50">

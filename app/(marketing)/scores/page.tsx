@@ -17,23 +17,35 @@ export default async function ScoresHubPage({ searchParams }: Props) {
 
   const supabase = createClient()
   
-  const { data: rawMatches } = await supabase
-    .from('matches')
-    .select(`
-      id, status, total_overs, players_per_team, venue, current_innings,
-      share_token, created_at, toss_winner_id, toss_choice,
-      batting_team_id, bowling_team_id,
-      winner_team_id, win_by_runs, win_by_wickets, is_tie,
-      team1:teams!matches_team1_id_fkey(id, name, short_name, color),
-      team2:teams!matches_team2_id_fkey(id, name, short_name, color),
-      tournament:tournaments(id, name, format),
-      innings(id, innings_number, total_runs, total_wickets, total_overs, total_balls, is_completed, target)
-    `)
-    .in('status', ['live', 'innings_break', 'completed'])
-    .eq('is_promoted', true)
-    .order('updated_at', { ascending: false })
-    .limit(50)
+  const [matchesResult, tournamentsResult] = await Promise.all([
+    supabase
+      .from('matches')
+      .select(`
+        id, status, total_overs, players_per_team, venue, current_innings,
+        share_token, created_at, toss_winner_id, toss_choice,
+        batting_team_id, bowling_team_id,
+        winner_team_id, win_by_runs, win_by_wickets, is_tie,
+        team1:teams!matches_team1_id_fkey(id, name, short_name, color),
+        team2:teams!matches_team2_id_fkey(id, name, short_name, color),
+        tournament:tournaments(id, name, format),
+        innings(id, innings_number, batting_team_id, total_runs, total_wickets, total_overs, total_balls, is_completed, target)
+      `)
+      .in('status', ['live', 'innings_break', 'completed'])
+      .eq('is_promoted', true)
+      .order('updated_at', { ascending: false })
+      .limit(50),
+    supabase
+      .from('tournaments')
+      .select(`
+        id, name, format, start_date, end_date, description,
+        teams(count)
+      `)
+      .eq('is_promoted', true)
+      .order('created_at', { ascending: false })
+      .limit(10),
+  ])
 
+  const { data: rawMatches } = matchesResult
   const allMatches = (rawMatches || []).slice(0, 30)
   
   const filteredMatches = allMatches.filter(m => {
@@ -50,15 +62,7 @@ export default async function ScoresHubPage({ searchParams }: Props) {
     return t1.includes(q) || t2.includes(q) || t1s.includes(q) || t2s.includes(q) || tour.includes(q);
   })
 
-  const { data: tournaments } = await supabase
-    .from('tournaments')
-    .select(`
-      id, name, format, start_date, end_date, description,
-      teams(count)
-    `)
-    .eq('is_promoted', true)
-    .order('created_at', { ascending: false })
-    .limit(10)
+  const { data: tournaments } = tournamentsResult
 
   return (
     <div className="bg-arena-dark min-h-screen pt-24 sm:pt-32 pb-20 px-4 sm:px-6">
@@ -83,7 +87,7 @@ export default async function ScoresHubPage({ searchParams }: Props) {
         </Suspense>
 
         {/* Real-time Match List (Live + Completed) */}
-        <PublicMatchList initialMatches={filteredMatches} />
+        <PublicMatchList initialMatches={filteredMatches} searchQuery={q} />
 
         {/* Featured Tournaments Section */}
         {tournaments && tournaments.length > 0 && (

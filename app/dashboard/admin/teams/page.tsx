@@ -7,7 +7,12 @@ export default async function AdminTeamsPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  const role = user.user_metadata?.role || 'manager'
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  const role = profile?.role || 'manager'
 
   const adminClient = createAdminClient()
 

@@ -4,12 +4,60 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import PublicMatchCard from './PublicMatchCard'
 import { Activity } from 'lucide-react'
+import { matchesApi } from '@/lib/api'
 
-export default function PublicMatchList({ initialMatches }: { initialMatches: any[] }) {
+function filterMatches(matches: any[], searchQuery: string) {
+  const query = searchQuery.trim().toLowerCase()
+  if (!query) return matches
+
+  const getField = (entity: any, field: string) =>
+    (Array.isArray(entity) ? entity[0] : entity)?.[field] || ''
+
+  return matches.filter(match =>
+    ['name', 'short_name'].some(field =>
+      getField(match.team1, field).toLowerCase().includes(query)
+      || getField(match.team2, field).toLowerCase().includes(query)
+    )
+    || getField(match.tournament, 'name').toLowerCase().includes(query)
+  )
+}
+
+export default function PublicMatchList({
+  initialMatches,
+  searchQuery = '',
+}: {
+  initialMatches: any[]
+  searchQuery?: string
+}) {
   const [matches, setMatches] = useState(initialMatches)
-  const supabase = createClient()
 
   useEffect(() => {
+    setMatches(filterMatches(initialMatches, searchQuery))
+  }, [initialMatches, searchQuery])
+
+  useEffect(() => {
+    const supabase = createClient()
+    let refreshInProgress = false
+
+    const refreshMatches = async () => {
+      if (refreshInProgress || document.visibilityState === 'hidden') return
+      refreshInProgress = true
+      try {
+        const { data, error } = await matchesApi.list({ limit: 50, promoted: 'true' })
+        if (error) throw new Error(error)
+        if (data) {
+          const visibleMatches = (data.matches || []).filter((match: any) =>
+            ['live', 'innings_break', 'completed'].includes(match.status)
+          )
+          setMatches(filterMatches(visibleMatches, searchQuery))
+        }
+      } catch (error) {
+        console.error('Failed to refresh public live scores:', error)
+      } finally {
+        refreshInProgress = false
+      }
+    }
+
     const channel = supabase.channel('public-match-hub')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'innings' }, (payload: any) => {
         if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
@@ -58,10 +106,15 @@ export default function PublicMatchList({ initialMatches }: { initialMatches: an
       })
       .subscribe()
 
+    const refreshInterval = window.setInterval(refreshMatches, 5000)
+    document.addEventListener('visibilitychange', refreshMatches)
+
     return () => {
+      window.clearInterval(refreshInterval)
+      document.removeEventListener('visibilitychange', refreshMatches)
       supabase.removeChannel(channel)
     }
-  }, [supabase])
+  }, [searchQuery])
 
   const liveMatches = matches.filter(m => m.status === 'live' || m.status === 'innings_break')
   const completedMatches = matches.filter(m => m.status === 'completed')

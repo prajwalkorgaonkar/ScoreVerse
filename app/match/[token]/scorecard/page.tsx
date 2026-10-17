@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import MatchScorecard from '@/components/match/MatchScorecard'
-import PublicNavbar from '@/components/shared/PublicNavbar'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,7 +36,6 @@ export default async function PublicMatchScorecardPage({ params }: { params: Pro
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-pitch-500/30">
-      <PublicNavbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in relative z-10 pt-24">
         <MatchScorecard
           match={match}

@@ -85,11 +85,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   const handleLogout = async () => {
     const supabase = createClient()
-    await supabase.auth.signOut()
-    toast.success('Signed out')
-    setTimeout(() => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      toast.success('Signed out')
       window.location.replace('/')
-    }, 400)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to sign out. Please try again.')
+    }
   }
 
   const isAdmin = profile?.role === 'super_admin'
@@ -130,7 +133,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     <>
       {nav.map((item) => {
         const isOverview = item.href === '/dashboard/admin' || item.href === '/dashboard/manager'
-        const active = isOverview ? pathname === item.href : pathname.startsWith(item.href)
+        const active = isOverview || item.href === '/'
+          ? pathname === item.href
+          : pathname.startsWith(item.href)
         return (
           <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
             className={cn(
@@ -207,12 +212,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       <AnimatePresence>
         {open && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              aria-label="Close navigation menu"
               onClick={() => setOpen(false)}
               className="fixed inset-0 bg-black/60 z-40 lg:hidden" />
             <motion.aside
               initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              id="dashboard-mobile-navigation"
               className="fixed inset-y-0 left-0 z-50 w-72 bg-arena-card border-r border-arena-border flex flex-col lg:hidden">
               <div className="p-5 border-b border-arena-border flex items-center justify-between">
                 <span className="text-lg font-display text-white tracking-wider">
@@ -222,7 +229,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                   <X size={20} />
                 </button>
               </div>
-              <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+              <nav aria-label="Dashboard navigation" className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                 <NavLinks />
               </nav>
               <div className="p-4 border-t border-arena-border">
@@ -239,8 +246,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <header className="h-16 border-b border-arena-border bg-arena-card/50 backdrop-blur flex items-center justify-between px-4 lg:px-6 flex-shrink-0 z-30">
-          <button onClick={() => setOpen(true)} className="lg:hidden text-gray-400 hover:text-white p-1">
-            <Menu size={22} />
+          <button
+            onClick={() => setOpen(!open)}
+            aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={open}
+            aria-controls="dashboard-mobile-navigation"
+            className="lg:hidden text-gray-400 hover:text-white p-1"
+          >
+            {open ? <X size={22} /> : <Menu size={22} />}
           </button>
           
           <div className="flex-1 hidden sm:block ml-4">

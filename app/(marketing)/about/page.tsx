@@ -1,5 +1,4 @@
 import { Trophy, Target, Shield, Zap } from 'lucide-react'
-import PublicNavbar from '@/components/shared/PublicNavbar'
 
 export const dynamic = 'force-static'
 
@@ -24,8 +23,6 @@ export default function AboutPage() {
 
   return (
     <div className="bg-arena-dark min-h-screen">
-      <PublicNavbar />
-      
       <div className="pt-32 pb-24 px-6 relative overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-pitch-600/5 blur-[120px] rounded-full pointer-events-none" />
         

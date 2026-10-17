@@ -9,7 +9,13 @@ export default async function ManagersPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  if (user.user_metadata?.role !== 'super_admin') redirect('/dashboard/manager')
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'super_admin') redirect('/dashboard/manager')
 
   const adminClient = createAdminClient()
   const { data: managers } = await adminClient

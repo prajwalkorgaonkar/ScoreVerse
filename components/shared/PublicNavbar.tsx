@@ -23,7 +23,15 @@ export default function PublicNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profile, setProfile] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
+  const [hash, setHash] = useState('')
   const pathname = usePathname()
+
+  const isLinkActive = (href: string) => {
+    const [linkPath, linkHash] = href.split('#')
+    if (linkHash) return pathname === linkPath && hash === `#${linkHash}`
+    if (linkPath === '/') return pathname === '/' && !hash
+    return pathname === linkPath || pathname.startsWith(`${linkPath}/`)
+  }
 
   useEffect(() => {
     const supabase = createClient()
@@ -62,10 +70,15 @@ export default function PublicNavbar() {
 
   const handleLogout = async () => {
     const supabase = createClient()
-    await supabase.auth.signOut()
-    toast.success('Signed out')
-    setProfile(null)
-    setMobileMenuOpen(false)
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      toast.success('Signed out')
+      setProfile(null)
+      setMobileMenuOpen(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to sign out. Please try again.')
+    }
   }
 
   useEffect(() => {
@@ -79,6 +92,13 @@ export default function PublicNavbar() {
   // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    const updateHash = () => setHash(window.location.hash)
+    updateHash()
+    window.addEventListener('hashchange', updateHash)
+    return () => window.removeEventListener('hashchange', updateHash)
   }, [pathname])
 
   return (
@@ -106,11 +126,12 @@ export default function PublicNavbar() {
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href
+              const isActive = isLinkActive(link.href)
               return (
                 <Link
                   key={link.name}
                   href={link.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     'text-sm font-medium transition-colors hover:text-white',
                     isActive ? 'text-pitch-400' : 'text-gray-400'
@@ -169,6 +190,9 @@ export default function PublicNavbar() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="public-mobile-navigation"
             className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -179,30 +203,41 @@ export default function PublicNavbar() {
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
+          <motion.nav
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
+            id="public-mobile-navigation"
+            aria-label="Mobile navigation"
             className="fixed inset-x-0 top-20 bottom-0 z-40 bg-arena-dark/95 backdrop-blur-3xl md:hidden overflow-y-auto"
           >
             <div className="flex flex-col px-6 pt-10 pb-12 space-y-2">
               <div className="text-[10px] font-bold tracking-widest text-gray-500 uppercase mb-4 px-1">Navigation</div>
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="text-2xl font-display text-gray-300 hover:text-white flex items-center justify-between group"
-                >
-                  {link.name}
-                  <ChevronRight size={20} className="text-pitch-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = isLinkActive(link.href)
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={cn(
+                      'text-2xl font-display flex items-center justify-between group',
+                      isActive ? 'text-pitch-400' : 'text-gray-300 hover:text-white'
+                    )}
+                  >
+                    {link.name}
+                    <ChevronRight size={20} className="text-pitch-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                )
+              })}
               
               <div className="pt-8 mt-8 border-t border-arena-border/50 flex flex-col gap-4">
                 {loadingUser ? null : profile ? (
                   <Link
                     href={profile.role === 'super_admin' ? '/dashboard/admin' : '/dashboard/manager'}
+                    onClick={() => setMobileMenuOpen(false)}
                     className="w-full py-4 flex items-center justify-center gap-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-medium rounded-xl transition-all shadow-glow-green/20"
                   >
                     <div className="w-7 h-7 rounded-full bg-pitch-600 flex items-center justify-center text-white text-xs font-bold">
@@ -214,12 +249,14 @@ export default function PublicNavbar() {
                   <>
                     <Link
                       href="/auth/login"
+                      onClick={() => setMobileMenuOpen(false)}
                       className="w-full py-4 text-center border border-arena-border hover:border-gray-500 text-white font-medium rounded-xl transition-colors"
                     >
                       Sign In
                     </Link>
                     <Link
                       href="/auth/register"
+                      onClick={() => setMobileMenuOpen(false)}
                       className="w-full py-4 text-center bg-pitch-600 hover:bg-pitch-500 text-white font-medium rounded-xl transition-colors shadow-glow-green"
                     >
                       Get Started for Free
@@ -237,7 +274,7 @@ export default function PublicNavbar() {
                 )}
               </div>
             </div>
-          </motion.div>
+          </motion.nav>
         )}
       </AnimatePresence>
     </>

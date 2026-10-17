@@ -16,7 +16,13 @@ export default async function AnalyticsPage() {
       </div>
     )
   }
-  if (user.user_metadata?.role !== 'super_admin') redirect('/dashboard/manager')
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'super_admin') redirect('/dashboard/manager')
 
   const adminClient = createAdminClient()
   const [

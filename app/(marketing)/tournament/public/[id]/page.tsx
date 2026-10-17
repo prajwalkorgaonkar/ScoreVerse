@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Trophy, Calendar, Users, Swords, Crosshair } from 'lucide-react'
-import PublicNavbar from '@/components/shared/PublicNavbar'
 import PublicMatchCard from '@/components/shared/PublicMatchCard'
 import { cn } from '@/lib/utils'
 
@@ -33,7 +32,7 @@ export default async function TournamentHubPage({ params }: { params: Promise<{ 
       team1:teams!matches_team1_id_fkey(id, name, short_name, color),
       team2:teams!matches_team2_id_fkey(id, name, short_name, color),
       tournament:tournaments(name, format),
-      innings(id, innings_number, total_runs, total_wickets, total_overs, total_balls, is_completed, target)
+      innings(id, innings_number, batting_team_id, total_runs, total_wickets, total_overs, total_balls, is_completed, target)
     `)
     .eq('tournament_id', id)
     .order('created_at', { ascending: false })
@@ -136,8 +135,6 @@ export default async function TournamentHubPage({ params }: { params: Promise<{ 
 
   return (
     <div className="min-h-screen bg-arena-dark">
-      <PublicNavbar />
-      
       <main className="max-w-7xl mx-auto px-6 pt-32 pb-24">
         {/* Hub Header */}
         <div className="glass-card rounded-3xl p-8 mb-8 border border-amber-500/20 relative overflow-hidden">

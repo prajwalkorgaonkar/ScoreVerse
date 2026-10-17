@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Activity, Mail, Globe, Phone } from 'lucide-react'
-import PublicNavbar from '@/components/shared/PublicNavbar'
 
 export default function ContactPage() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -38,8 +37,6 @@ export default function ContactPage() {
 
   return (
     <div className="bg-arena-dark min-h-screen">
-      <PublicNavbar />
-      
       <div className="pt-32 pb-24 px-6 relative overflow-hidden">
         {/* Abstract Backgrounds */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pitch-600/10 blur-[120px] rounded-full pointer-events-none" />
